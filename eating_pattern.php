@@ -2,18 +2,17 @@
 session_start();
 
 $days = [
-    "monday" => [
-        "08:00 - 09:00" => ["Bread", "Cheese", "Apple"],
-        "12:00 - 12:30" => ["Soup", "Granola Bar"],
-        "18:00 - 19:00" => ["Rice", "Lasagna", "Ice Cream"],
-    ],
-    "tuesday" => [
-        "08:00 - 09:00" => ["Bread", "Mango", "Nutella"],
-        "12:00 - 12:30" => ["Rice", "Rice"]
-    ]
+        "monday" => [
+                "08:00 - 09:00" => ["Bread", "Cheese", "Apple"],
+                "12:00 - 12:30" => ["Soup", "Granola Bar"],
+                "18:00 - 19:00" => ["Rice", "Lasagna", "Ice Cream"],
+        ],
+        "tuesday" => [
+                "08:00 - 09:00" => ["Bread", "Mango", "Nutella"],
+                "12:00 - 12:30" => []
+        ]
 ];
 
-$currentDay = strtolower(date("l"));
 ?>
 <!doctype html>
 <html lang="en">
@@ -41,7 +40,8 @@ $currentDay = strtolower(date("l"));
         <section class="bg-[var(--text-block)] rounded-2xl p-4 shadow-lg">
             <h2 class="text-xl font-bold capitalize mb-4"><?= $day ?></h2>
             <?php foreach ($meals as $time => $foods): ?>
-                <div class="border-b border-[var(--elements)] pb-2 mb-2">
+                <?php $containerId = strtolower($day . '-' . $time); ?>
+                <div id="<?= str_replace([' ', ':'], '-', $containerId) ?>" class="border-b border-[var(--elements)] pb-2 mb-2">
                     <p class="font-semibold"><?= $time ?></p>
                     <?php if (!empty($foods)): ?>
                         <ul class="list-disc list-inside text-gray-700">
@@ -49,19 +49,20 @@ $currentDay = strtolower(date("l"));
                                 <li><?= $food ?></li>
                             <?php endforeach; ?>
                         </ul>
-                    <?php else: ?>
-                        <button class="bg-[var(--elements)] text-white rounded px-3 py-1 mt-2 hover:opacity-90"
-                                onclick="addMeal('<?= $day ?>','<?= $time ?>')">
-                            Add here +
-                        </button>
                     <?php endif; ?>
+                    <button class="bg-[var(--elements)] text-white rounded px-3 py-1 mt-2 hover:opacity-90"
+                            onclick="addMeal('<?= $day ?>','<?= $time ?>')">
+                        Add here +
+                    </button>
                 </div>
             <?php endforeach; ?>
         </section>
     <?php endforeach; ?>
 
-    <div>
-        <p>hier komt de AI chatbot </p>
+<!--    ai komt hier. IS-->
+    <div class="bg-white rounded-2xl p-4 shadow-lg">
+        <h3 class="font-bold text-lg mb-2">Your AI Coach</h3>
+        <p class="text-gray-700">Tips, tops & suggestions will appear here to help you eat healthier 🥦💡</p>
     </div>
 </main>
 
