@@ -1,1 +1,6 @@
+@import url("https://fonts.googleapis.com/css2?family=Alan+Sans:wght@300..900&display=swap");
 @import "tailwindcss";
+
+@theme {
+    --font-alan: "Alan Sans", sans-serif;
+}
