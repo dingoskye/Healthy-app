@@ -68,7 +68,9 @@ mysqli_close($db);
 </head>
 <body>
 <nav>
-
+    <a href=""><img src="" alt="logo"></a>
+    <a href="">Settings</a>
+    <a href="">Notifications</a>
 </nav>
 <header>
 
@@ -99,7 +101,7 @@ mysqli_close($db);
             <p class="textStyle">
                 Nog geen account?
             </p>
-            <a href="register.php">Registreren</a>
+            <a href="register.php">Register</a>
         </div>
 
     </form>
