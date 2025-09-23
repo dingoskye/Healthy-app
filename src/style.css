@@ -5,3 +5,7 @@
     --background: #8FC0A9;
     --elements: #68B0AB;
 }
+
+body {
+    font-family: 'Inter', sans-serif;
+}
