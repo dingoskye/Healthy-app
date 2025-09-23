@@ -1,26 +1,78 @@
-
 <?php
-// === Simple API logic ===
-// If this is an API request (AJAX GET), return a JSON with stored data
+//// ================== BACKEND LOGIC ==================
+//// Dit PHP-gedeelte verwerkt de API-aanroepen (GET & POST)
+//
+//// ✅ Als het een GET-aanvraag is met ?api=1 → stuur JSON met opgeslagen data terug
+//if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
+//    header('Content-Type: application/json');
+//    $file = __DIR__ . '/nutrition_data.json'; // Bestand waarin data wordt bewaard
+//    if (file_exists($file)) {
+//        echo file_get_contents($file);       // Stuur bestaande data terug
+//    } else {
+//        echo json_encode([]);                // Als geen data → stuur lege JSON
+//    }
+//    exit;
+//}
+//
+//// ✅ Als het een POST-aanvraag is met ?api=1 → sla nieuwe data op
+//if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
+//    header('Content-Type: application/json');
+//    $input = json_decode(file_get_contents('php://input'), true); // Ontvang JSON van frontend
+//    file_put_contents(__DIR__ . '/nutrition_data.json', json_encode($input)); // Opslaan in bestand
+//    echo json_encode(['status' => 'saved']);  // Bevestiging terugsturen
+//    exit;
+//}
+
+global $db;
+include 'includes/database.php'; // Verbind met je MySQL-database
+// ================== BACKEND LOGIC ==================
+// POST request met ?api=1 → sla nieuwe data op in database
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
+    header('Content-Type: application/json');
+    $input = json_decode(file_get_contents('php://input'), true); // Ontvang JSON van frontend
+
+    // Bereid SQL statement voor
+    $stmt = $db->prepare("INSERT INTO nutrition_data (fruit, vegetables, carbs, dairy, protein) VALUES (?, ?, ?, ?, ?)
+                           ON DUPLICATE KEY UPDATE
+                           fruit=VALUES(fruit), vegetables=VALUES(vegetables),
+                           carbs=VALUES(carbs), dairy=VALUES(dairy), protein=VALUES(protein)");
+
+    $stmt->bind_param(
+        "sssss",
+        $input['fruit'],
+        $input['vegetables'],
+        $input['carbs'],
+        $input['dairy'],
+        $input['protein']
+    );
+
+    if ($stmt->execute()) {
+        echo json_encode(['status' => 'saved']);
+    } else {
+        echo json_encode(['status' => 'error', 'message' => $stmt->error]);
+    }
+
+    $stmt->close();
+    $db->close();
+    exit;
+}
+
+// GET request met ?api=1 → haal data uit database
 if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
     header('Content-Type: application/json');
-    $file = __DIR__ . '/nutrition_data.json';
-    if (file_exists($file)) {
-        echo file_get_contents($file);
+
+    $result = $db->query("SELECT * FROM nutrition_data ORDER BY id DESC LIMIT 1"); // laatste rij
+    if ($result && $row = $result->fetch_assoc()) {
+        echo json_encode($row);
     } else {
         echo json_encode([]);
     }
+
+    $db->close();
     exit;
 }
 
-// If this is an API POST to save new data
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true);
-    file_put_contents(__DIR__ . '/nutrition_data.json', json_encode($input));
-    echo json_encode(['status' => 'saved']);
-    exit;
-}
+
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -28,17 +80,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Nutrition Tracker</title>
+    <!-- TailwindCSS voor snelle styling -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="src/JS/nitro.js">
 </head>
-<body class="bg-[#FAF3DD] text-[#353831] min-h-screen flex flex-col items-center p-6">
+<body class="bg-[#FAF3DD] text-[#353831] min-h-screen flex flex-col items-center">
 
-<header class="bg-[#8FC0A9] w-full p-4 rounded-2xl shadow-lg text-center mb-6">
+<!-- ===== HEADER ===== -->
+<header class="bg-[#8FC0A9] w-full p-4 rounded shadow-lg text-center mb-6">
     <h1 class="text-2xl font-bold">Hey there Anna,</h1>
     <p class="text-lg">Let’s track your nutritions</p>
 </header>
 
+<!-- ===== MAIN CONTENT ===== -->
 <main id="tracker" class="w-full max-w-md space-y-6">
-    <!-- Fruits -->
+
+    <!-- ✅ Statusmeldingen boven het formulier -->
+    <div id="status" class="text-center text-sm mb-4 font-semibold"></div>
+
+    <!-- ====== Fruit-keuze knoppen ====== -->
     <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
         <h2 class="font-semibold mb-3">How many fruits have you eaten today?</h2>
         <div id="fruit-options" class="flex justify-between">
@@ -49,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
         </div>
     </section>
 
-    <!-- Other inputs -->
+    <!-- ✅ Tekstvelden voor overige categorieën -->
     <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
         <h2 class="font-semibold mb-3">What vegetables have you had so far?</h2>
         <input id="vegetables" type="text" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
@@ -70,85 +130,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
         <input id="protein" type="text" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
     </section>
 
+    <!-- ✅ Opslaan-knop -->
     <button id="submit" class="w-full bg-[#00916E] hover:bg-[#0E1774] text-white font-bold py-3 rounded-xl shadow-lg">
         Save Nutrition
     </button>
 
+    <!-- ✅ Statusmeldingen (bijv. “saved successfully”) -->
     <div id="status" class="text-center text-sm mt-4"></div>
 </main>
 
-<script>
-    window.addEventListener("load", () => init());
-
-    const apiUrl = "index.php?api=1";
-    let selectedFruit = "";
-    let fruitButtons = [];
-    let statusEl;
-
-    const init = () => {
-        fruitButtons = document.querySelectorAll(".fruit-btn");
-        statusEl = document.getElementById("status");
-
-        // Attach fruit button listeners
-        fruitButtons.forEach(btn => {
-            btn.addEventListener("click", () => selectFruit(btn.innerText));
-        });
-
-        // Load previous data from server
-        fetchNutritionData();
-
-        // Submit button
-        document.getElementById("submit").addEventListener("click", () => saveNutritionData());
-    };
-
-    const selectFruit = (value) => {
-        selectedFruit = value;
-        fruitButtons.forEach(b => b.classList.remove("ring","ring-[#264653]"));
-        fruitButtons.forEach(b => { if (b.innerText === value) b.classList.add("ring","ring-[#264653]"); });
-    };
-
-    const fetchNutritionData = () => {
-        fetch(apiUrl)
-            .then(res => res.json())
-            .then(data => {
-                console.log("✅ Nutrition data received:", data);
-                if (data.fruit) selectFruit(data.fruit);
-                document.getElementById("vegetables").value = data.vegetables || "";
-                document.getElementById("carbs").value = data.carbs || "";
-                document.getElementById("dairy").value = data.dairy || "";
-                document.getElementById("protein").value = data.protein || "";
-            })
-            .catch(err => {
-                console.error("❌ Error fetching data:", err);
-                statusEl.innerText = "Error loading data.";
-            });
-    };
-
-    const saveNutritionData = () => {
-        const payload = {
-            fruit: selectedFruit,
-            vegetables: document.getElementById("vegetables").value,
-            carbs: document.getElementById("carbs").value,
-            dairy: document.getElementById("dairy").value,
-            protein: document.getElementById("protein").value
-        };
-
-        fetch(apiUrl, {
-            method: "POST",
-            headers: {"Content-Type": "application/json"},
-            body: JSON.stringify(payload)
-        })
-            .then(res => res.json())
-            .then(resp => {
-                console.log("✅ Saved:", resp);
-                statusEl.innerText = "Nutrition saved successfully!";
-            })
-            .catch(err => {
-                console.error("❌ Error saving:", err);
-                statusEl.innerText = "Error saving data.";
-            });
-    };
-</script>
+<!-- ✅ Koppel het externe JavaScript bestand -->
+<script src="src/JS/nitro.js"></script>
 
 </body>
 </html>
