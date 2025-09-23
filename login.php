@@ -67,49 +67,57 @@ mysqli_close($db);
           content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <title>Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="src/style.css">
 </head>
-<body>
-<nav>
-    <a href=""><img src="" alt="logo"></a>
-    <a href="">Settings</a>
-    <a href="">Notifications</a>
+<body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
+<nav class="flex items-center justify-between px-6 py-4 bg-white shadow">
+    <a href="#"><img src="" alt="logo" class="h-10"></a>
+    <div class="space-x-4 text-xl">
+        <a href="#" class="hover:text-blue-600">⚙️</a>
+        <a href="#" class="hover:text-blue-600">🔔</a>
+    </div>
 </nav>
-<header>
-
+<header class="text-center mt-12">
+    <h1 class="text-3xl font-bold text-gray-900">Login</h1>
 </header>
-<main>
-    <form action="" method="post">
-        <div class="container">
-            <label for="email">E-mail</label>
-        </div>
-        <input id="email" type="email" name="email" value="<?= htmlentities($email ?? '') ?>">
-        <p class="error">
-            <?= $errors['email'] ?? '' ?>
-        </p>
-        <div class="container">
-            <label for="password">Wachtwoord</label>
-        </div>
-        <input id="password" type="password" name="password">
-        <p class="error">
-            <?= $errors['password'] ?? '' ?>
-        </p>
-        <p class="error">
-            <?= $errors['loginFailed'] ?? '' ?>
-        </p>
-        <div class="buttonStyle">
-            <button class="button" type="submit" name="submit">Login</button>
-        </div>
-        <div class="styleLink">
-            <p class="textStyle">
-                Nog geen account?
+<main class="flex flex-1 items-center justify-center">
+    <form action="" method="post"
+          class="bg-white shadow-md rounded-2xl p-8 w-full max-w-md space-y-6">
+        <div>
+            <label for="email" class="block text-sm font-medium text-gray-700">E-mail</label>
+            <input id="email" type="email" name="email"
+                   value="<?= htmlentities($email ?? '') ?>"
+                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            <p class="text-sm text-red-600 mt-1">
+                <?= $errors['email'] ?? '' ?>
             </p>
-            <a href="register.php">Register</a>
         </div>
-
+        <div>
+            <label for="password" class="block text-sm font-medium text-gray-700">Wachtwoord</label>
+            <input id="password" type="password" name="password"
+                   class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+            <p class="text-sm text-red-600 mt-1">
+                <?= $errors['password'] ?? '' ?>
+            </p>
+            <p class="text-sm text-red-600 mt-1">
+                <?= $errors['loginFailed'] ?? '' ?>
+            </p>
+        </div>
+        <div>
+            <button type="submit" name="submit"
+                    class="w-full bg-blue-600 text-white py-2 px-4 rounded-lg hover:bg-blue-700 focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                Login
+            </button>
+        </div>
+        <div class="text-center text-sm">
+            <p class="text-gray-600">Nog geen account?</p>
+            <a href="register.php" class="text-blue-600 hover:underline">Register</a>
+        </div>
     </form>
 </main>
-<footer>
-
+<footer class="py-6 text-center text-gray-500 text-sm">
+    <p>©Nutricoach</p>
 </footer>
 </body>
 </html>
