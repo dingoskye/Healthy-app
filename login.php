@@ -1,4 +1,6 @@
 <?php
+ini_set('display_errors', 1);
+error_reporting(E_ALL);
 /** @var mysqli $db */
 require_once 'includes/database.php';
 session_start();
