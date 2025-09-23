@@ -32,7 +32,7 @@ if (isset($_POST['submit'])) {
         $errors['dateOfBirth'] = 'Date of birth is required in YYYY-MM-DD format.';
     }
     if ($sex === '') {
-        $errors['sex'] = 'Sex is required.';
+        $errors['sex'] = 'Answer is required.';
     }
     if ($height === '' || !is_numeric($height)) {
         $errors['height'] = 'Height (cm) is required and must be numeric.';
