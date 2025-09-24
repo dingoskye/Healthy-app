@@ -35,9 +35,44 @@
 <main class="flex-1 p-4 space-y-6">
 
     <section>
-        <!--        In de main komt de chat met de chatbot, Aan het begin zal er een bericht staan van; "Vul een prompt in-->
-        <!--        zodat ik je kan helpen! En als er eenmaal iets is gegeven is het gewoon een chat.-->
-        <!--        Maak van Settings een pop up slide van de zijkant, zo kan je prgm 3 gebruiken.-->
+        <div class="max-w-[780px] mx-auto min-h-screen grid grid-rows-[auto_1fr_auto] gap-3 p-4">
+            <!-- Header -->
+            <header class="flex items-center justify-between">
+                <h1 class="text-[18px] tracking-wide m-0">Nutricoach!</h1>
+                <div class="flex gap-2 items-center">
+                    <label for="model" class="sr-only">Model</label>
+                    <select id="model"
+                            class="bg-[#171a2b] text-[#e8ebf1] border border-[#22263d] rounded-[10px] px-3 py-2">
+                        <option value="gpt-4o-mini">gpt-4o-mini</option>
+                        <option value="gpt-4o">gpt-4o</option>
+                    </select>
+                </div>
+            </header>
+
+            <!-- Chat -->
+            <div class="bg-[#171a2b] border border-[#1e2340] rounded-2xl p-3 grid grid-rows-[1fr_auto] overflow-hidden">
+                <div id="messages"
+                     class="overflow-y-auto p-2 flex flex-col gap-3 max-h-[60vh] text-[#e8ebf1]"
+                     aria-live="polite"></div>
+
+
+                <div class="grid grid-cols-[1fr_auto] gap-2 p-2 border-t border-dashed border-[#2a304f]">
+        <textarea id="input"
+                  class="resize-none min-h-[48px] max-h-[160px] bg-[#0e1120] text-[#e8ebf1] border border-[#1f2442] rounded-xl p-3"
+                  placeholder="Type your message and press Enter..." autofocus></textarea>
+                    <button id="sendBtn"
+                            class="bg-[#4f7dff] text-white rounded-xl px-4 py-2 font-semibold disabled:opacity-60">
+                        Send
+                    </button>
+                </div>
+            </div>
+
+            <p class="text-[#9aa4b2] text-xs mt-1">
+                Requests gaan via <code>api/chat.php</code> zodat je OpenAI sleutel op de server blijft.
+            </p>
+        </div>
+
+        <script src="src/JS/chatbot.js"></script>
     </section>
 
 </main>

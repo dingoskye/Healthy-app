@@ -1,4 +1,4 @@
-:root {
+    :root {
     --header-nav: #4A7C59;
     --text-block: #FAF3DD;
     /*--extra: #C8D5B9; */
@@ -15,3 +15,4 @@
     font-weight: 400;
     font-style: normal;
 }
+

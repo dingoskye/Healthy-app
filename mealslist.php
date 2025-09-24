@@ -6,14 +6,12 @@ require_once 'includes/database.php';
 
 $errors = [];
 
-if (!isset($_SESSION['login'])) {
-    header('Location: login.php');
-    exit();
-}
+// GEEN login-check tijdens testen
+// if (!isset($_SESSION['login'])) { header('Location: login.php'); exit(); }
 
 if (isset($_POST['submit'])) {
-    // Relatie naar users
-    $userId    = $_SESSION['login']['id'];
+    // tijdens testen: vaste user_id
+    $userId = 1;
 
     // Form velden
     $mealType  = $_POST['meal_type'];
@@ -79,6 +77,7 @@ if (isset($_POST['submit'])) {
 
 <main>
     <form action="" method="post" class="contact-form">
+        <input type="hidden" name="user_id" value="1">
         <div class="main-content-container">
 
             <div class="contact-field">
