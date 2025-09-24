@@ -58,7 +58,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const containerDate = new Date(dateStr + 'T00:00:00');
         containerDate.setHours(0,0,0,0);
         if (containerDate > today) {
-            alert("Je kunt voor toekomstige dagen niet toevoegen.");
             return;
         }
         addMealUI(container, dateStr);
@@ -101,14 +100,16 @@ function renderWeek(selectedDate) {
         if (dayDateSpan) dayDateSpan.innerText = `• ${formatDisplayDate(dayDate)}`;
 
         sec.querySelectorAll(".time-slot").forEach(slot => {
-            //ging mis toen ik innerText gebruikt, vandaar html. IS
+            const time = slot.getAttribute('data-time') || '';
             slot.innerHTML = `
-                <button type="button"
-                        class="add-meal-btn bg-[var(--elements)] text-white rounded px-3 py-1 hover:opacity-90">
-                    add meal
-                </button>
-            `;
+        <p class="font-semibold">${time}</p>
+        <button type="button"
+                class="add-meal-btn bg-[var(--elements)] text-white rounded px-3 py-1 mt-2 hover:opacity-90">
+            add meal
+        </button>
+    `;
         });
+
 
         sec.querySelectorAll('.add-meal-btn').forEach(btn => {
             if (dayDate > today) {
@@ -241,7 +242,7 @@ function autocomplete(input, listContainer, onSelectProduct) {
     let controller = null;
     input.addEventListener("input", async function () {
         const value = this.value.trim().toLowerCase();
-        listContainer.innerHTML = "";
+        listContainer.innerText = "";
         if (controller) controller.abort();
         if (!value) return;
 
@@ -392,11 +393,11 @@ function updateAITips(food) {
     let message;
     const normalized = (food || "").toLowerCase();
     if (normalized.includes("ice") || normalized.includes("nutella") || normalized.includes("sugar")) {
-        message = `"${food}" is lekker — let op je suikerinname!`;
+        message = `"${food}" looks tasty BUT be careful with sugars!`;
     } else if (normalized.includes("apple") || normalized.includes("banana") || normalized.includes("salad") || normalized.includes("cucumber") || normalized.includes("mango")) {
-        message = `Goed bezig! "${food}" is een gezonde keuze.`;
+        message = `Good! "${food}" that's a healthy choice.`;
     } else {
-        message = `ℹ Je hebt "${food}" toegevoegd. Zorg voor balans in je maaltijden.`;
+        message = `ℹ You added "${food}". Keeps a nice balance with your meals.`;
     }
 
     const p = document.createElement("p");

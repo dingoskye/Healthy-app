@@ -3,7 +3,7 @@ session_start();
 
 $currentWeek = date("W");
 $daysOfWeek = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
-$timeSlots = ["08:00 - 09:00","12:00 - 12:30","18:00 - 19:00"];
+$timeSlots = ["Breakfast", "Lunch", "Dinner"];
 $days = [];
 foreach ($daysOfWeek as $day) {
     $days[$day] = array_fill_keys($timeSlots, []);
