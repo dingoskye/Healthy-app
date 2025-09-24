@@ -141,8 +141,6 @@ if (isset($_POST['submit'])) {
                         <option value="other">Other / Prefer not to say</option>
                     </select>
                 </div>
-
-
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
