@@ -11,22 +11,30 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/style.css">
 </head>
-<body class="bg-[var(--background)] text-gray-800 min-h-screen flex flex-col">
+<body >
 <nav>
     <a href="index.php"><img src="" alt="logo"></a>
-    <div class="space-x-4">
+    <div>
         <a href="#" class="hover:underline">⚙️</a>
         <a href="#" class="hover:underline">🔔</a>
     </div>
 </nav>
-<header class="flex p-4 space-y-6">
+<header>
     <h1>Fitness exercises</h1>
     <p>These exercises are based on age, skill level
         and personal preferences</p>
 </header>
-<main class="flex-1 p-4 space-y-6">
-    <p id="current-date"></p>
-    <script src="src/JS/date.js"></script>
+<main>
+    <section>
+        <div>
+            <p id="current-date"></p>
+            <script src="src/JS/date.js"></script>
+        </div>
+        <!--- hier komen de ai gegenereerde oefeningen
+
+
+        --->
+    </section>
 
     <div>
         <p>Hier komt de chatbot</p>
