@@ -100,6 +100,16 @@ function renderWeek(selectedDate) {
         const dayDateSpan = sec.querySelector('.day-date');
         if (dayDateSpan) dayDateSpan.innerText = `• ${formatDisplayDate(dayDate)}`;
 
+        sec.querySelectorAll(".time-slot").forEach(slot => {
+            //ging mis toen ik innerText gebruikt, vandaar html. IS
+            slot.innerHTML = `
+                <button type="button"
+                        class="add-meal-btn bg-[var(--elements)] text-white rounded px-3 py-1 hover:opacity-90">
+                    add meal
+                </button>
+            `;
+        });
+
         sec.querySelectorAll('.add-meal-btn').forEach(btn => {
             if (dayDate > today) {
                 btn.disabled = true;
@@ -124,6 +134,17 @@ function renderWeek(selectedDate) {
     }
 }
 
+function restoreMeals(section, dateStr) {
+    const key = `meals_${dateStr}`;
+    const meals = JSON.parse(localStorage.getItem(key) || "[]");
+    const slots = section.querySelectorAll(".time-slot");
+
+    if (meals.length > 0 && slots.length > 0) {
+        const container = slots[0];
+        meals.forEach(product => appendFoodToContainer(container, product, dateStr));
+    }
+}
+
 function addMealUI(container, dateStr) {
     if (container.querySelector('.meal-input-wrapper')) return;
 
@@ -144,6 +165,7 @@ function addMealUI(container, dateStr) {
     btn.type = "button";
     btn.innerText = "Add";
     btn.className = "mt-2 bg-[var(--elements)] text-white rounded px-3 py-1 hover:opacity-90 block";
+
     btn.addEventListener('click', () => {
         const food = input.value.trim();
         if (!food) return;
@@ -153,7 +175,6 @@ function addMealUI(container, dateStr) {
         wrapper.remove();
     });
     wrapper.appendChild(btn);
-
     container.appendChild(wrapper);
 
     autocomplete(input, listContainer, (product) => {
@@ -170,9 +191,9 @@ function appendFoodToContainer(container, product, dateStr) {
         ul.className = "list-disc list-inside text-gray-700 mt-2 space-y-1";
         container.appendChild(ul);
     }
-
     const li = document.createElement("li");
-    li.className = "flex items-center space-x-3";
+    li.className = "flex items-center space-x-3 meal-item cursor-pointer hover:bg-gray-100 p-1 rounded";
+    li.title = "Click for more information";
 
     if (product.image_front_small_url || product.image_small_url || product.image_url) {
         const img = document.createElement("img");
@@ -183,9 +204,20 @@ function appendFoodToContainer(container, product, dateStr) {
     }
 
     const span = document.createElement("span");
-    span.innerText = product.product_name || "Onbekend product";
-
+    span.innerText = product.product_name || "Unknown product";
+    span.className = "meal-text flex-1";
     li.appendChild(span);
+
+    const delBtn = document.createElement("button");
+    delBtn.innerText = "delete";
+    delBtn.className = "text-red-500 hover:text-red-700";
+    delBtn.addEventListener("click", (e) => {
+        e.stopPropagation(); //voor komt dat modal opent. IS
+        li.remove();
+        deleteMeal(dateStr, product);
+    });
+    li.appendChild(delBtn);
+
     ul.appendChild(li);
 
     updateAITips(product.product_name || "");
@@ -198,14 +230,11 @@ function saveMeal(dateStr, product) {
     localStorage.setItem(key, JSON.stringify(meals));
 }
 
-function restoreMeals(section, dateStr) {
+function deleteMeal(dateStr, product) {
     const key = `meals_${dateStr}`;
-    const meals = JSON.parse(localStorage.getItem(key) || "[]");
-    const slots = section.querySelectorAll(".time-slot");
-    if (meals.length > 0 && slots.length > 0) {
-        const container = slots[0];
-        meals.forEach(product => appendFoodToContainer(container, product, dateStr));
-    }
+    let meals = JSON.parse(localStorage.getItem(key) || "[]");
+    meals = meals.filter(p => p.product_name !== product.product_name);
+    localStorage.setItem(key, JSON.stringify(meals));
 }
 
 function autocomplete(input, listContainer, onSelectProduct) {
@@ -289,6 +318,72 @@ function showFoodInfo(product) {
         }
     };
 }
+
+function setupMealModal() {
+    const mealModal = document.getElementById("meal-modal");
+    const closeBtn = document.getElementById("meal-modal-close-btn");
+    closeBtn.addEventListener("click", () => {
+        mealModal.classList.add("hidden");
+        mealModal.classList.remove("flex");
+    });
+    mealModal.addEventListener("click", (e) => {
+        if (e.target === mealModal) {
+            mealModal.classList.add("hidden");
+            mealModal.classList.remove("flex");
+        }
+    });
+
+    document.addEventListener("click", (e) => {
+        const mealItem = e.target.closest(".meal-item");
+        if (!mealItem) return;
+        const productName = mealItem.querySelector("span")?.innerText || "Onbekend";
+        const productImg = mealItem.querySelector("img")?.src || "https://via.placeholder.com/128";
+        document.getElementById("meal-modal-title").innerText = productName;
+        document.getElementById("meal-modal-img").src = productImg;
+        document.getElementById("meal-modal-brand").innerText = "Laden...";
+        document.getElementById("meal-modal-energy").innerText = "Laden...";
+        document.getElementById("meal-modal-sugars").innerText = "Laden...";
+
+        mealModal.classList.remove("hidden");
+        mealModal.classList.add("flex");
+
+        fetchProductInfo(productName);
+    });
+}
+
+async function fetchProductInfo(productName) {
+    try {
+        const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(productName)}&search_simple=1&action=process&json=1&page_size=1`;
+        const res = await fetch(url);
+        const data = await res.json();
+
+        if (data.products && data.products.length > 0) {
+            const product = data.products[0];
+            document.getElementById("meal-modal-brand").innerText = product.brands || "Onbekend merk";
+            document.getElementById("meal-modal-energy").innerText =
+                (product.nutriments?.energy_kcal_100g || product.nutriments?.energy_100g || "Onbekend") + " kcal / 100g";
+            document.getElementById("meal-modal-sugars").innerText =
+                (product.nutriments?.sugars_100g || "unknown") + " g / 100g";
+
+            if (product.image_url) {
+                document.getElementById("meal-modal-img").src = product.image_url;
+            }
+        } else {
+            document.getElementById("meal-modal-brand").innerText = "No information found";
+            document.getElementById("meal-modal-energy").innerText = "Not available";
+            document.getElementById("meal-modal-sugars").innerText = "Not available";
+        }
+    } catch (error) {
+        console.error("Fout bij ophalen productinfo:", error);
+        document.getElementById("meal-modal-brand").innerText = "Error";
+        document.getElementById("meal-modal-energy").innerText = "Try again";
+        document.getElementById("meal-modal-sugars").innerText = "Try again";
+    }
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+    setupMealModal();
+});
 
 function updateAITips(food) {
     const msgBox = document.getElementById("ai-messages");

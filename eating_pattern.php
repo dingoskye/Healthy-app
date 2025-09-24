@@ -32,20 +32,21 @@ foreach ($daysOfWeek as $day) {
 
 <main class="flex-1 p-6">
 
-    <div id="food-modal"
+    <div id="meal-modal"
          class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
-            <h2 class="text-xl font-bold mb-2" id="modal-title"></h2>
-            <img class="w-32 h-32 object-cover mx-auto mb-4" id="modal-img" src="" alt="Food">
-            <p><strong>Merk:</strong> <span id="modal-brand"></span></p>
-            <p><strong>Calorieën:</strong> <span id="modal-energy"></span></p>
-            <p><strong>Suikers:</strong> <span id="modal-sugars"></span></p>
+            <h2 class="text-xl font-bold mb-2" id="meal-modal-title">Information about meal</h2>
+            <img class="w-32 h-32 object-cover mx-auto mb-4" id="meal-modal-img" src="" alt="Food">
+            <p><strong>Brand:</strong> <span id="meal-modal-brand"></span></p>
+            <p><strong>Calories:</strong> <span id="meal-modal-energy"></span></p>
+            <p><strong>Sugars:</strong> <span id="meal-modal-sugars"></span></p>
             <div class="mt-4 text-right">
-                <button id="modal-close-btn"
-                        class="bg-[var(--elements)] text-white px-4 py-2 rounded">Sluiten</button>
+                <button id="meal-modal-close-btn"
+                        class="bg-[var(--elements)] text-white px-4 py-2 rounded">Close</button>
             </div>
         </div>
     </div>
+
 
     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
         <section id="eating-area" class="md:col-span-2 space-y-6">
@@ -88,12 +89,7 @@ foreach ($daysOfWeek as $day) {
                     <input type="date" id="datePicker" max="<?= date('Y-m-d'); ?>" class="border rounded px-2 py-1 flex-1" />
                     <button id="nextWeekBtn" type="button" class="px-2 py-1 bg-[var(--elements)] text-white rounded">&raquo;</button>
                 </div>
-                <p class="text-sm text-gray-600">Kies een datum. Gebruik pijlen om weken te navigeren.</p>
-            </div>
-
-            <div class="bg-white rounded-2xl p-4 shadow">
-                <h3 class="font-bold mb-2">Agenda</h3>
-                <p class="text-sm text-gray-600">Hier kun je later extra agenda-gegevens of events tonen.</p>
+                <p class="text-sm text-gray-600">Choose a date. Use the arrows to navigate.</p>
             </div>
         </aside>
     </div>
@@ -106,10 +102,10 @@ foreach ($daysOfWeek as $day) {
             <h3 class="text-lg font-bold">AI Coach</h3>
         </div>
         <div id="ai-messages" class="overflow-auto text-sm text-gray-700 flex-1 space-y-2">
-            <p>Welkom! Ik geef je tips zodra je eten toevoegt.</p>
+            <p>Welcome! I will provide you with tips about your meals!</p>
         </div>
         <div class="mt-3">
-            <button id="ai-close-btn" class="w-full bg-[var(--elements)] text-white rounded px-3 py-2">Sluit coach</button>
+            <button id="ai-close-btn" class="w-full bg-[var(--elements)] text-white rounded px-3 py-2">Close Coach</button>
         </div>
     </div>
 </div>
