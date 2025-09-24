@@ -4,14 +4,20 @@ error_reporting(E_ALL);
 session_start();
 require_once 'includes/database.php';
 
+$userId = $_SESSION['user_id'] ?? null;
+
+if ($userId === null) {
+    // gebruiker niet ingelogd → stuur terug naar login
+    header('Location: login.php');
+    exit();
+}
+
 $errors = [];
 
 // GEEN login-check tijdens testen
 // if (!isset($_SESSION['login'])) { header('Location: login.php'); exit(); }
 
 if (isset($_POST['submit'])) {
-    // tijdens testen: vaste user_id
-    $userId = 1;
 
     // Form velden
     $mealType  = $_POST['meal_type'];
@@ -77,7 +83,6 @@ if (isset($_POST['submit'])) {
 
 <main>
     <form action="" method="post" class="contact-form">
-        <input type="hidden" name="user_id" value="1">
         <div class="main-content-container">
 
             <div class="contact-field">
