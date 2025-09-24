@@ -101,26 +101,26 @@ if (isset($_POST['submit'])) {
                 <div>
                     <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First name</label>
                     <input id="firstName" name="firstName" type="text" required
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
                 <div>
                     <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
                     <input id="lastName" name="lastName" type="text" required
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
             </div>
 
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
                 <input id="email" name="email" type="email" required
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                       class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
             </div>
 
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
                 <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password"
-                       class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                       class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 <p class="mt-1 text-xs text-gray-500">Minimum 8 characters.</p>
             </div>
 
@@ -128,13 +128,13 @@ if (isset($_POST['submit'])) {
                 <div>
                     <label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1">Date of birth</label>
                     <input id="dateOfBirth" name="dateOfBirth" type="date" required
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
                 <div>
                     <label for="sex" class="block text-sm font-medium text-gray-700 mb-1">Sex</label>
                     <select id="sex" name="sex" required
-                            class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2">
+                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">Choose...</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
@@ -149,13 +149,13 @@ if (isset($_POST['submit'])) {
                 <div>
                     <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
                     <input id="height" name="height" type="number" step="0.01" min="0" required
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
                 <div>
                     <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
                     <input id="weight" name="weight" type="number" step="0.01" min="0" required
-                           class="w-full rounded-md border-gray-300 shadow-sm focus:ring-2 focus:ring-indigo-300 focus:border-indigo-500 p-2" />
+                           class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
             </div>
