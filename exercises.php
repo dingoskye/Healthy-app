@@ -4,6 +4,7 @@ session_start();
 require_once 'includes/database.php';
 
 // Get user ID (from session or default)
+// How does this code work if it uses user_id? and not id? 
 $user_id = $_SESSION['user_id'] ?? 1;
 
 // Fetch preferences

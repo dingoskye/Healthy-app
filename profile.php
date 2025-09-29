@@ -1,16 +1,17 @@
 <?php
 require_once 'includes/database.php';
 session_start();
-
-// Example: check login
-if (!isset($_SESSION['user_id'])) {
+//var_dump($_SESSION);
+//exit;
+// checks if the user is logged in.
+if (!isset($_SESSION['id'])) {
     header("Location: login.php");
     exit;
 }
-$userId = $_SESSION['user_id'];
+$userId = $_SESSION['id'];
 
-// Fetch current user info
-$query = "SELECT first_name, last_name, email, date_of_birth, sex, height_cm, weight_kg, preferences 
+// Fetches the current user info so no ?id=5.
+$query = "SELECT first_name, last_name, email, date_of_birth, sex, height_cm, weight_kg, preferences
           FROM users WHERE id = ?";
 $stmt = $db->prepare($query);
 $stmt->bind_param("i", $userId);
@@ -19,7 +20,7 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $stmt->close();
 
-// Split preferences back into two parts (simple split)
+// Split preferences back into two parts.
 $preferencesPart = '';
 $allergiesPart = '';
 if (!empty($user['preferences'])) {
@@ -31,6 +32,14 @@ if (!empty($user['preferences'])) {
             $allergiesPart = trim(str_replace("Allergies:", "", $line));
         }
     }
+}
+
+// Calculates the age.
+$age = '';
+if (!empty($user['date_of_birth'])) {
+    $dob = new DateTime($user['date_of_birth']);
+    $now = new DateTime();
+    $age = $dob->diff($now)->y;
 }
 ?>
 <!doctype html>
@@ -44,7 +53,7 @@ if (!empty($user['preferences'])) {
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
 
-<!-- Nav stays the same -->
+<!-- Nav -->
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
     <span class="font-bold text-lg">
         <a href="index.php">Nutricoach</a>
@@ -55,64 +64,87 @@ if (!empty($user['preferences'])) {
     </div>
 </nav>
 
-<main class="flex-grow flex items-center justify-center p-6">
-    <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h1>
+<main class="flex-grow flex flex-col items-center p-6">
 
-        <form action="update_profile.php" method="post" class="space-y-6">
-            <!-- Name fields -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                    <input type="text" name="firstName" value="<?= htmlspecialchars($user['first_name']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                    <input type="text" name="lastName" value="<?= htmlspecialchars($user['last_name']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
-                </div>
-            </div>
+    <!-- Profile header -->
+    <div class="w-full max-w-md bg-[#3e6b4f] rounded-lg p-6 text-center text-white shadow-md">
+        <!-- Profile picture placeholder -->
+        <div class="w-28 h-28 rounded-full bg-gray-300 mx-auto mb-4"></div>
 
-            <!-- DOB -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" name="dateOfBirth" value="<?= htmlspecialchars($user['date_of_birth']) ?>"
-                       class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
-            </div>
+        <!-- Name -->
+        <div class="bg-gray-100 text-gray-900 font-bold px-4 py-2 rounded-lg inline-block mb-2">
+            <?= htmlspecialchars($user['first_name'] . " " . $user['last_name']) ?>
+        </div>
+
+        <!-- DOB + Age -->
+        <div class="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg inline-block mb-4">
+            <?= htmlspecialchars(date("d/m/Y", strtotime($user['date_of_birth']))) ?>
+            (<?= $age ?> years)
+        </div>
+
+        <!-- Logout -->
+        <form action="logout.php" method="post" class="mb-6">
+            <button type="submit"
+                    class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600">
+                LOG OUT
+            </button>
+        </form>
+
+        <hr class="border-gray-300 mb-6">
+
+        <h2 class="text-lg font-bold mb-4">Optional Information</h2>
+
+        <!-- Editable form -->
+        <form action="update_profile.php" method="post" class="space-y-6 text-left">
 
             <!-- Height & Weight -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
-                    <input type="number" name="height" step="0.01" value="<?= htmlspecialchars($user['height_cm']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Height (cm)</label>
+                    <input type="number" name="height" step="0.01"
+                           value="<?= htmlspecialchars($user['height_cm']) ?>"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"/>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-                    <input type="number" name="weight" step="0.01" value="<?= htmlspecialchars($user['weight_kg']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
-                </div>
-            </div>
-
-            <!-- Preferences & Allergies -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Eating Preferences</label>
-                    <textarea name="preferences_text" rows="4"
-                              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"><?= htmlspecialchars($preferencesPart) ?></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Allergies</label>
-                    <textarea name="allergies_text" rows="4"
-                              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"><?= htmlspecialchars($allergiesPart) ?></textarea>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Weight (kg)</label>
+                    <input type="number" name="weight" step="0.01"
+                           value="<?= htmlspecialchars($user['weight_kg']) ?>"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"/>
                 </div>
             </div>
 
-            <!-- Submit -->
-            <div class="flex justify-end">
+            <!-- Diet & Allergies -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Diet</label>
+                    <textarea name="preferences_text" rows="2"
+                              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"><?= htmlspecialchars($preferencesPart) ?></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Allergies</label>
+                    <textarea name="allergies_text" rows="2"
+                              class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"><?= htmlspecialchars($allergiesPart) ?></textarea>
+                </div>
+            </div>
+
+            <!-- Extra fields -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Extra</label>
+                    <input type="text" name="extra1"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"/>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Extra</label>
+                    <input type="text" name="extra2"
+                           class="w-full rounded-lg border border-gray-300 px-3 py-2 text-gray-900"/>
+                </div>
+            </div>
+
+            <!-- Save button -->
+            <div class="flex justify-center">
                 <button type="submit"
-                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
                     Save Changes
                 </button>
             </div>
