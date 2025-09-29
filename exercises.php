@@ -1,8 +1,77 @@
 <?php
 session_start();
+/** @var mysqli $db */
+require_once 'includes/database.php';
 
+// Get user ID (from session or default)
+$user_id = $_SESSION['user_id'] ?? 1;
 
+// Fetch preferences
+$prefs = [];
+$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ?");
+$stmt->bind_param("i", $user_id);
+$stmt->execute();
+$result = $stmt->get_result();
+if ($result) {
+    $prefs = $result->fetch_assoc() ?: [];
+}
+$stmt->close();
 
+// Set variables for form
+$goal = $prefs['goal'] ?? '';
+$level = $prefs['level'] ?? '';
+$equipment = $prefs['equipment'] ?? '';
+$time_limit = $prefs['time_limit'] ?? '';
+$focus_area = $prefs['focus_area'] ?? '';
+
+// Save preferences if form submitted
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
+    $goal = $_POST['goal'];
+    $level = $_POST['level'];
+    $equipment = $_POST['equipment'];
+    $time_limit = $_POST['time_limit'];
+    $focus_area = $_POST['focus_area'];
+
+    $stmt = $db->prepare("REPLACE INTO `exercise_settings` (user_id, goal, level, equipment, time_limit, focus_area) VALUES (?, ?, ?, ?, ?, ?)");
+    $stmt->bind_param("isssis", $user_id, $goal, $level, $equipment, $time_limit, $focus_area);
+    $stmt->execute();
+    $stmt->close();
+}
+
+// Generate exercises
+function generateExercises($goal, $level, $equipment, $time_limit, $focus_area) {
+    $prompt = "Generate a $time_limit minute $level workout for $goal, focusing on $focus_area, using $equipment. Give a list of exercises with sets and reps.";
+    $messages = [
+            ['role' => 'system', 'content' => 'You are a helpful fitness coach.'],
+            ['role' => 'user', 'content' => $prompt]
+    ];
+
+    $data = [
+            'model' => 'gpt-4o-mini',
+            'messages' => $messages
+    ];
+
+    $ch = curl_init('api/chat.php');
+    curl_setopt_array($ch, [
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_HTTPHEADER => ['Content-Type: application/json'],
+            CURLOPT_POSTFIELDS => json_encode($data),
+            CURLOPT_TIMEOUT => 30,
+    ]);
+    $res = curl_exec($ch);
+
+    $reply = '(No response)';
+    if ($res) {
+        $json = json_decode($res, true);
+        if (isset($json['reply'])) {
+            $reply = $json['reply'];
+        }
+    }
+    return $reply;
+}
+
+$exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_area);
 ?>
 <!doctype html>
 <html lang="en">
@@ -16,11 +85,11 @@ session_start();
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
-<nav>
+<nav class="flex items-center justify-between px-6 py-4 bg-white shadow">
     <span class="font-bold text-lg">
         <a href="index.php">Nutricoach</a>
     </span>
-    <div>
+    <div class="space-x-4 text-xl">
         <a href="#" class="hover:underline">⚙️</a>
         <a href="#" class="hover:underline">🔔</a>
     </div>
@@ -32,9 +101,7 @@ session_start();
 </header>
 <main>
     <section>
-        <!--- Hier komen de instellingen --->
         <div class="collapse collapse-arrow bg-base-200 shadow rounded-lg my-4">
-            <input type="checkbox" id="settings-collapse" />
             <div class="collapse-title text-lg font-medium">
                 Personal preferences
             </div>
@@ -69,7 +136,7 @@ session_start();
                         <label for="time_limit" class="block text-sm font-medium mb-1">Time limit (in minutes)</label>
                         <input type="number" id="time_limit" name="time_limit" value="<?= htmlspecialchars($time_limit) ?>" class="input input-bordered w-full" required>
                     </div>
-
+                    <!-- Focus area -->
                     <div class="mb-4">
                         <label for="focus_area" class="block text-sm font-medium mb-1">Focus area</label>
                         <select id="focus_area" name="focus_area" class="select select-bordered w-full" required>
@@ -91,17 +158,19 @@ session_start();
             <p id="current-date"></p>
             <script src="src/JS/date.js"></script>
         </div>
-        <!--- hier komen de ai gegenereerde oefeningen
-
-
-        --->
+        <?php if (!empty($exercises)): ?>
+            <div class="bg-white rounded-lg shadow p-6 my-6">
+                <h2 class="text-xl font-semibold mb-2">Your personalized workout</h2>
+                <div class="prose max-w-none whitespace-pre-line"><?= nl2br(htmlspecialchars($exercises)) ?></div>
+            </div>
+        <?php endif; ?>
     </section>
 
     <div>
         <p>Hier komt de chatbot</p>
     </div>
 </main>
-<footer>
+<footer class="py-6 text-center text-gray-300 text-sm bg-[var(--header-nav)]">
     <p>©Nutricoach</p>
 </footer>
 </body>

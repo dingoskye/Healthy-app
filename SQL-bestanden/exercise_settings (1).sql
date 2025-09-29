@@ -34,7 +34,7 @@ CREATE TABLE `exercise_settings` (
   `goal` varchar(50) DEFAULT 'general fitness',
   `level` varchar(20) DEFAULT 'beginner',
   `equipment` varchar(100) DEFAULT 'none',
-  `time_limit` bigint DEFAULT '0',
+  `time_limit` bigint DEFAULT '30',
   `focus_area` varchar(50) DEFAULT 'full body',
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
