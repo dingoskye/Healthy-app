@@ -23,7 +23,9 @@ foreach ($daysOfWeek as $day) {
 <body class="bg-[var(--background)] text-gray-800 min-h-screen flex flex-col">
 
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
-    <span class="font-bold text-lg">Eating Patterns</span>
+    <span class="font-bold text-lg">
+        <a href="index.php">Nutricoach</a>
+    </span>
     <div class="space-x-4">
         <a href="#" class="hover:underline">⚙️</a>
         <a href="#" class="hover:underline">🔔</a>
@@ -35,7 +37,7 @@ foreach ($daysOfWeek as $day) {
     <div id="meal-modal"
          class="fixed inset-0 bg-black bg-opacity-50 hidden items-center justify-center z-50">
         <div class="bg-white p-6 rounded-lg shadow-lg max-w-md w-full relative">
-            <h2 class="text-xl font-bold mb-2" id="meal-modal-title">Information about meal</h2>
+            <h2 class="text-xl fo   nt-bold mb-2" id="meal-modal-title">Information about meal</h2>
             <img class="w-32 h-32 object-cover mx-auto mb-4" id="meal-modal-img" src="" alt="Food">
             <p><strong>Brand:</strong> <span id="meal-modal-brand"></span></p>
             <p><strong>Calories:</strong> <span id="meal-modal-energy"></span></p>
