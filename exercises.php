@@ -48,7 +48,6 @@ session_start();
                             <option value="balance" <?= $goal === 'balance' ? 'selected' : '' ?>>Balance and flexibility</option>
                         </select>
                     </div>
-
                     <!-- level -->
                     <div class="mb-4">
                         <label for="level" class="block text-sm font-medium mb-1">Level</label>
@@ -58,20 +57,17 @@ session_start();
                             <option value="advanced" <?= $level === 'advanced' ? 'selected' : '' ?>>Advanced</option>
                         </select>
                     </div>
-
                     <!-- equipment -->
                     <div class="mb-4">
                         <label for="equipment" class="block text-sm font-medium mb-1">equipment</label>
                         <input type="text" id="equipment" name="equipment" value="<?= htmlspecialchars($equipment) ?>" class="input input-bordered w-full" placeholder="Say dumbbells, resistance band, none" required>
                     </div>
-
                     <!-- Time limit -->
                     <div class="mb-4">
                         <label for="time_limit" class="block text-sm font-medium mb-1">Time limit (in minutes)</label>
                         <input type="number" id="time_limit" name="time_limit" value="<?= htmlspecialchars($time_limit) ?>" class="input input-bordered w-full" required>
                     </div>
 
-                    <!-- Focusarea -->
                     <div class="mb-4">
                         <label for="focus_area" class="block text-sm font-medium mb-1">Focus area</label>
                         <select id="focus_area" name="focus_area" class="select select-bordered w-full" required>
