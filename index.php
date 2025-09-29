@@ -1,5 +1,5 @@
 <?php
-// Function for a logged in user to get access
+// //Function for a logged in user to get access
 //session_start();
 //
 //// Check if the visitor is logged in
