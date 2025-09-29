@@ -14,7 +14,9 @@
 <body class="bg-[var(--background)] text-gray-800 min-h-screen flex flex-col">
 
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
-    <span class="font-bold text-lg">Nutricoach</span>
+    <span class="font-bold text-lg">
+        <a href="index.php">Nutricoach</a>
+    </span>
     <div class="space-x-4">
         <!-- Settings button -->
         <a href="#" id="settingsBtn" class="hover:underline">⚙️</a>
@@ -82,20 +84,20 @@
 
 <!-- Hidden sidebar -->
 <div id="settingsSidebar"
-     class="fixed top-0 right-0 h-full w-64 bg-white shadow-lg transform translate-x-full transition-transform duration-300 z-50">
-    <div class="p-4 flex justify-between items-center border-b">
+     class="fixed top-0 right-0 h-full w-96 bg-white shadow-lg transform translate-x-full transition-transform duration-300 z-50">
+    <div class="p-4 flex justify-between items-center border-b bg-[var(--header-nav)]">
         <h2 class="font-bold text-lg">Settings</h2>
-        <button id="closeSettings" class="text-gray-600 hover:text-gray-900">&times;</button>
+        <button id="closeSettings" class="text-gray-900 hover:text-black">&times;</button>
     </div>
     <div class="p-4 space-y-4">
         <p>Settings content goes here...</p>
         <label class="block">
-            <span class="text-gray-700">Option 1</span>
-            <input type="checkbox" class="mt-1">
+            <span class="text-blue-600">
+                <a href="profile.php">bruh</a>
+            </span>
         </label>
         <label class="block">
             <span class="text-gray-700">Option 2</span>
-            <input type="checkbox" class="mt-1">
         </label>
     </div>
 </div>

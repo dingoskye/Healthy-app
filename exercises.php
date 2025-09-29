@@ -17,7 +17,9 @@ session_start();
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
 <nav>
-    <a href="index.php"><img src="" alt="logo"></a>
+    <span class="font-bold text-lg">
+        <a href="index.php">Nutricoach</a>
+    </span>
     <div>
         <a href="#" class="hover:underline">⚙️</a>
         <a href="#" class="hover:underline">🔔</a>
