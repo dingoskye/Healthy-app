@@ -27,10 +27,12 @@ if (isset($_POST['submit'])) {
     if ($password === '' || strlen($password) < 8) {
         $errors['password'] = 'Password must be at least 8 characters long.';
     }
+
     // Validate date (simple)
     if ($dateOfBirth === '' || !\DateTime::createFromFormat('Y-m-d', $dateOfBirth)) {
         $errors['dateOfBirth'] = 'Date of birth is required';
     }
+
     if ($sex === '') {
         $errors['sex'] = 'Answer is required.';
     }
@@ -83,7 +85,7 @@ if (isset($_POST['submit'])) {
     </div>
 </nav>
 <header class="text-center mt-12">
-    <h1 class="text-3xl font-bold text-gray-900">Login</h1>
+    <h1 class="text-3xl font-bold text-gray-900">Register</h1>
 </header>
 
 <div class="flex-grow flex items-center justify-center px-4">
