@@ -34,12 +34,6 @@ if (isset($_POST['submit'])) {
     if ($sex === '') {
         $errors['sex'] = 'Answer is required.';
     }
-    if ($height === '' || !is_numeric($height)) {
-        $errors['height'] = 'Height (cm) is required and must be numeric.';
-    }
-    if ($weight === '' || !is_numeric($weight)) {
-        $errors['weight'] = 'Weight (kg) is required and must be numeric.';
-    }
 
     if (empty($errors)) {
         // Hash password
@@ -145,13 +139,13 @@ if (isset($_POST['submit'])) {
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                    <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
+                    <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm) (optional)</label>
                     <input id="height" name="height" type="number" step="0.01" min="0" required
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
                 <div>
-                    <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
+                    <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg) (optional)</label>
                     <input id="weight" name="weight" type="number" step="0.01" min="0" required
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
