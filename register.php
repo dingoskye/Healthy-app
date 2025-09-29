@@ -29,7 +29,7 @@ if (isset($_POST['submit'])) {
     }
     // Validate date (simple)
     if ($dateOfBirth === '' || !\DateTime::createFromFormat('Y-m-d', $dateOfBirth)) {
-        $errors['dateOfBirth'] = 'Date of birth is required in YYYY-MM-DD format.';
+        $errors['dateOfBirth'] = 'Date of birth is required';
     }
     if ($sex === '') {
         $errors['sex'] = 'Answer is required.';
@@ -94,59 +94,79 @@ if (isset($_POST['submit'])) {
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="firstName" class="block text-sm font-medium text-gray-700 mb-1">First name</label>
-                    <input id="firstName" name="firstName" type="text" required
+                    <input id="firstName" name="firstName" type="text"
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    <p class="block text-sm font-medium text-red-500 mb-1">
+                        <?= $errors['firstName'] ?? '' ?>
+                    </p>
                 </div>
+
 
                 <div>
                     <label for="lastName" class="block text-sm font-medium text-gray-700 mb-1">Last name</label>
-                    <input id="lastName" name="lastName" type="text" required
+                    <input id="lastName" name="lastName" type="text"
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    <p class="block text-sm font-medium text-red-500 mb-1">
+                        <?= $errors['lastName'] ?? '' ?>
+                    </p>
                 </div>
             </div>
 
             <div>
                 <label for="email" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                <input id="email" name="email" type="email" required
+                <input id="email" name="email" type="email"
                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                <p class="block text-sm font-medium text-red-500 mb-1">
+                    <?= $errors['email'] ?? '' ?>
+                </p>
             </div>
 
             <div>
                 <label for="password" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
-                <input id="password" name="password" type="password" required minlength="8" autocomplete="new-password"
+                <input id="password" name="password" type="password"  minlength="8" autocomplete="new-password"
                        class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 <p class="mt-1 text-xs text-gray-500">Minimum 8 characters.</p>
+                <p class="block text-sm font-medium text-red-500 mb-1">
+                    <?= $errors['password'] ?? '' ?>
+                </p>
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="dateOfBirth" class="block text-sm font-medium text-gray-700 mb-1">Date of birth</label>
-                    <input id="dateOfBirth" name="dateOfBirth" type="date" required
+                    <input id="dateOfBirth" name="dateOfBirth" type="date"
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                    <p class="block text-sm font-medium text-red-500 mb-1">
+                        <?= $errors['dateOfBirth'] ?? '' ?>
+                    </p>
                 </div>
 
                 <div>
                     <label for="sex" class="block text-sm font-medium text-gray-700 mb-1">Sex</label>
-                    <select id="sex" name="sex" required
+                    <select id="sex" name="sex"
                             class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none">
                         <option value="">Choose...</option>
                         <option value="male">Male</option>
                         <option value="female">Female</option>
                         <option value="other">Other / Prefer not to say</option>
                     </select>
+                    <p class="block text-sm font-medium text-red-500 mb-1">
+                        <?= $errors['sex'] ?? '' ?>
+                    </p>
                 </div>
+
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                     <label for="height" class="block text-sm font-medium text-gray-700 mb-1">Height (cm) (optional)</label>
-                    <input id="height" name="height" type="number" step="0.01" min="0" required
+                    <input id="height" name="height" type="number" step="0.01" min="0"
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
                 <div>
                     <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg) (optional)</label>
-                    <input id="weight" name="weight" type="number" step="0.01" min="0" required
+                    <input id="weight" name="weight" type="number" step="0.01" min="0"
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
                 </div>
 
