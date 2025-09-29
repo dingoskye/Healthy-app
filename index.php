@@ -1,13 +1,13 @@
 <?php
-// //Function for a logged in user to get access
-//session_start();
-//
-//// Check if the visitor is logged in
-//if (!isset($_SESSION['user'])) {  // **GET**: Check if user is logged in (session variable)
-//    // Redirect if not logged in
-//    header("Location: login.php");
-//    exit;
-//}
+ //Function for a logged in user to get access
+session_start();
+
+// Check if the visitor is logged in
+if (!isset($_SESSION['Login'])) {  // **GET**: Check if user is logged in (session variable)
+    // Redirect if not logged in
+    header("Location: login.php");
+    exit;
+}
 
 ?>
 <!doctype html>
