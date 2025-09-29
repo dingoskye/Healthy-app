@@ -11,6 +11,8 @@ if (isset($_POST['submit'])) {
     $sex         = trim($_POST['sex'] ?? '');
     $height      = trim($_POST['height'] ?? ''); // numeric (cm)
     $weight      = trim($_POST['weight'] ?? ''); // numeric (kg)
+    $preferences = trim($_POST['preferences'] ?? ''); // <-- NIEUW: vrije tekst uit het formulier
+
 
     $errors = [];
 
@@ -46,16 +48,29 @@ if (isset($_POST['submit'])) {
         $hashedPassword = password_hash($password, PASSWORD_DEFAULT);
 
         // Map to DB column names from `SQL-bestanden/prototype_nutribot.sql`
-        $query = "INSERT INTO users (first_name, last_name, email, password, date_of_birth, sex, height_cm, weight_kg) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
+        // Map to DB column names (inclusief preferences)
+        $query = "INSERT INTO users (first_name, last_name, email, password, date_of_birth, sex, height_cm, weight_kg, preferences) 
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)";
         $stmt = $db->prepare($query);
 
         if ($stmt === false) {
             $errors['database'] = 'Failed to prepare statement: ' . $db->error;
         } else {
-            // Bind parameters: 6 strings (s) and 2 doubles (d) for decimal columns
+            // Bind parameters: 6 strings (s), 2 doubles (d), en nog een string voor preferences
             $heightFloat = (float) $height;
             $weightFloat = (float) $weight;
-            $stmt->bind_param('ssssssdd', $firstName, $lastName, $email, $hashedPassword, $dateOfBirth, $sex, $heightFloat, $weightFloat);
+            $stmt->bind_param(
+                'ssssssdds',
+                $firstName,
+                $lastName,
+                $email,
+                $hashedPassword,
+                $dateOfBirth,
+                $sex,
+                $heightFloat,
+                $weightFloat,
+                $preferences
+            );
 
             if ($stmt->execute()) {
                 $stmt->close();
@@ -66,6 +81,7 @@ if (isset($_POST['submit'])) {
                 $stmt->close();
             }
         }
+
     }
 }
 ?>
@@ -154,6 +170,16 @@ if (isset($_POST['submit'])) {
                     <label for="weight" class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
                     <input id="weight" name="weight" type="number" step="0.01" min="0" required
                            class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none" />
+                </div>
+
+                <div>
+                    <label for="preferences" class="block text-sm font-medium text-gray-700 mb-1">
+                        Eating preferences (optional)
+                    </label>
+                    <textarea id="preferences" name="preferences" rows="4"
+                              class="mt-1 w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                              placeholder="Bijv. ik ben vegetarisch; geen pinda/gluten; halal vlees"><?= isset($_POST['preferences']) ? htmlentities($_POST['preferences']) : '' ?></textarea>
+                    <p class="mt-1 text-xs text-gray-500">Vrije tekst, bv: “ik ben vegetarisch en eet geen vis”.</p>
                 </div>
 
             </div>

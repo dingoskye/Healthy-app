@@ -1,13 +1,10 @@
 <?php
-ini_set('display_errors', 1);
-error_reporting(E_ALL);
 session_start();
 require_once 'includes/database.php';
 
-$userId = $_SESSION['user_id'] ?? null;
+$userId = $_SESSION['id'] ?? null; // <-- use 'id' instead of 'user_id'
 
 if ($userId === null) {
-    // gebruiker niet ingelogd → stuur terug naar login
     header('Location: login.php');
     exit();
 }
