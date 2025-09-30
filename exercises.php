@@ -8,7 +8,8 @@ $user_id = $_SESSION['user_id'] ?? 1;
 
 // Fetch preferences
 $prefs = [];
-$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ?");
+//$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ?");
+$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ? ORDER BY id DESC LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
