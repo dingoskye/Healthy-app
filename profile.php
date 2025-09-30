@@ -2,15 +2,15 @@
 require_once 'includes/database.php';
 session_start();
 
-// Example: check login
-if (!isset($_SESSION['user_id'])) {
+// Make sure the user is logged in
+if (!isset($_SESSION['id'])) {
     header("Location: login.php");
     exit;
 }
-$userId = $_SESSION['user_id'];
+$userId = $_SESSION['id'];
 
-// Fetch current user info
-$query = "SELECT first_name, last_name, email, date_of_birth, sex, height_cm, weight_kg, preferences 
+// Fetch current user info (no ?id= in url needed)
+$query = "SELECT first_name, last_name, email, date_of_birth, sex, height_cm, weight_kg, preferences
           FROM users WHERE id = ?";
 $stmt = $db->prepare($query);
 $stmt->bind_param("i", $userId);
@@ -19,18 +19,56 @@ $result = $stmt->get_result();
 $user = $result->fetch_assoc();
 $stmt->close();
 
-// Split preferences back into two parts (simple split)
+// If no user is found, redirect to login
+if (!$user) {
+    header("Location: login.php");
+    exit;
+}
+
+// Split preferences for db
 $preferencesPart = '';
 $allergiesPart = '';
 if (!empty($user['preferences'])) {
-    $lines = explode("\n", $user['preferences']);
+    $lines = preg_split("/\r\n|\n|\r/", $user['preferences']);
     foreach ($lines as $line) {
-        if (str_starts_with($line, "Preferences:")) {
-            $preferencesPart = trim(str_replace("Preferences:", "", $line));
-        } elseif (str_starts_with($line, "Allergies:")) {
-            $allergiesPart = trim(str_replace("Allergies:", "", $line));
+        $line = trim($line);
+        if ($line === '') continue;
+        if (function_exists('str_starts_with')) {
+            if (str_starts_with($line, "Preferences:")) {
+                $preferencesPart = trim(substr($line, strlen("Preferences:")));
+            } elseif (str_starts_with($line, "Allergies:")) {
+                $allergiesPart = trim(substr($line, strlen("Allergies:")));
+            }
+        } else {
+            // fallback for older PHP versions
+            if (strpos($line, "Preferences:") === 0) {
+                $preferencesPart = trim(substr($line, strlen("Preferences:")));
+            } elseif (strpos($line, "Allergies:") === 0) {
+                $allergiesPart = trim(substr($line, strlen("Allergies:")));
+            }
         }
     }
+}
+
+// Calculate age
+$age = '-';
+$dobFormatted = '-';
+if (!empty($user['date_of_birth']) && strtotime($user['date_of_birth']) !== false) {
+    try {
+        $dob = new DateTime($user['date_of_birth']);
+        $now = new DateTime();
+        $age = $dob->diff($now)->y;
+        $dobFormatted = $dob->format('d/m/Y');
+    } catch (Exception $e) {
+        $age = '-';
+        $dobFormatted = '-';
+    }
+}
+
+// Helper for safe output
+function e($s)
+{
+    return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
 }
 ?>
 <!doctype html>
@@ -38,13 +76,13 @@ if (!empty($user['preferences'])) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Profile</title>
+    <title>Profile — Details</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
 
-<!-- Nav stays the same -->
+<!-- Nav -->
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
     <span class="font-bold text-lg">
         <a href="index.php">Nutricoach</a>
@@ -55,68 +93,106 @@ if (!empty($user['preferences'])) {
     </div>
 </nav>
 
-<main class="flex-grow flex items-center justify-center p-6">
-    <div class="w-full max-w-2xl bg-white shadow-md rounded-lg p-8">
-        <h1 class="text-2xl font-bold text-gray-900 mb-6">Edit Profile</h1>
+<main class="flex-grow flex flex-col items-center p-6">
 
-        <form action="update_profile.php" method="post" class="space-y-6">
-            <!-- Name fields -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+    <!-- Profile header -->
+    <div class="w-full max-w-md bg-[#3e6b4f] rounded-lg p-6 text-center text-white shadow-md">
+        <!-- Profile picture placeholder -->
+        <div class="w-28 h-28 rounded-full bg-gray-300 mx-auto mb-4"></div>
+
+        <!-- Name -->
+        <div class="bg-gray-100 text-gray-900 font-bold px-4 py-2 rounded-lg inline-block mb-2">
+            <?= e($user['first_name'] . ' ' . $user['last_name']) ?>
+        </div>
+
+        <!-- DOB + Age -->
+        <div class="bg-gray-100 text-gray-900 px-4 py-2 rounded-lg inline-block mb-4">
+            <?= e($dobFormatted) ?> (<?= e($age) ?> years)
+        </div>
+
+        <!-- Logout -->
+        <form action="logout.php" method="post" class="mb-6">
+            <button type="submit"
+                    class="px-6 py-2 bg-red-500 text-white font-bold rounded-lg hover:bg-red-600">
+                LOG OUT
+            </button>
+        </form>
+
+        <hr class="border-gray-300 mb-6">
+
+        <h2 class="text-lg font-bold mb-4">Optional Information</h2>
+
+        <!-- Read-only details -->
+        <div class="space-y-6 text-left">
+
+            <!-- Contact & Personal -->
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">First Name</label>
-                    <input type="text" name="firstName" value="<?= htmlspecialchars($user['first_name']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Email</label>
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                        <?= e($user['email']) ?>
+                    </p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Last Name</label>
-                    <input type="text" name="lastName" value="<?= htmlspecialchars($user['last_name']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Sex</label>
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                        <?= e($user['sex'] ?? '-') ?>
+                    </p>
                 </div>
-            </div>
-
-            <!-- DOB -->
-            <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
-                <input type="date" name="dateOfBirth" value="<?= htmlspecialchars($user['date_of_birth']) ?>"
-                       class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
             </div>
 
             <!-- Height & Weight -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div class="grid grid-cols-2 gap-4">
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Height (cm)</label>
-                    <input type="number" name="height" step="0.01" value="<?= htmlspecialchars($user['height_cm']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Height (cm)</label>
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                        <?= e($user['height_cm'] !== null && $user['height_cm'] !== '' ? $user['height_cm'] : '-') ?>
+                    </p>
                 </div>
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Weight (kg)</label>
-                    <input type="number" name="weight" step="0.01" value="<?= htmlspecialchars($user['weight_kg']) ?>"
-                           class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"/>
-                </div>
-            </div>
-
-            <!-- Preferences & Allergies -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Eating Preferences</label>
-                    <textarea name="preferences_text" rows="4"
-                              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"><?= htmlspecialchars($preferencesPart) ?></textarea>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-1">Allergies</label>
-                    <textarea name="allergies_text" rows="4"
-                              class="w-full rounded-lg border border-gray-300 px-3 py-2 focus:ring-2 focus:ring-indigo-500 focus:outline-none"><?= htmlspecialchars($allergiesPart) ?></textarea>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Weight (kg)</label>
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                        <?= e($user['weight_kg'] !== null && $user['weight_kg'] !== '' ? $user['weight_kg'] : '-') ?>
+                    </p>
                 </div>
             </div>
 
-            <!-- Submit -->
-            <div class="flex justify-end">
-                <button type="submit"
-                        class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-400">
-                    Save Changes
-                </button>
+            <!-- Diet & Allergies -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Diet / Preferences</label>
+                    <p class="whitespace-pre-line bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                        <?= e($preferencesPart ?: '-') ?>
+                    </p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Allergies</label>
+                    <p class="whitespace-pre-line bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                        <?= e($allergiesPart ?: '-') ?>
+                    </p>
+                </div>
             </div>
-        </form>
+
+            <!-- Extra fields (placeholders) -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Extra</label>
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">-</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-100 mb-1">Extra</label>
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">-</p>
+                </div>
+            </div>
+
+            <!-- Edit button -->
+            <div class="flex justify-center">
+                <a href="update_profile.php"
+                   class="px-6 py-2 bg-indigo-600 text-white rounded-lg hover:bg-indigo-700">
+                    Edit Profile
+                </a>
+            </div>
+        </div>
     </div>
 </main>
 
