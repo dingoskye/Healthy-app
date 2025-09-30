@@ -1,6 +1,11 @@
 <?php
 session_start();
 
+if (!isset($_SESSION['Login'])) {
+    header("Location: login.php");
+    exit;
+}
+
 $currentWeek = date("W");
 $daysOfWeek = ["monday","tuesday","wednesday","thursday","friday","saturday","sunday"];
 $timeSlots = ["Breakfast", "Lunch", "Dinner"];
