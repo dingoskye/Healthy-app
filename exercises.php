@@ -47,7 +47,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
 // Generate exercises
 // Generate exercises
 function generateExercises($goal, $level, $equipment, $time_limit, $focus_area) {
-    $prompt = "Generate a $time_limit minute $level workout for $goal, focusing on $focus_area, using $equipment. Give a list of exercises with sets and reps.";
+    $prompt = "Generate a $time_limit minute $level workout for $goal, focusing on $focus_area, using $equipment. Give a list of exercises with sets, reps and explanation.";
     $messages = [
             ['role' => 'system', 'content' => 'You are a helpful fitness coach.'],
             ['role' => 'user', 'content' => $prompt]
@@ -110,7 +110,7 @@ if ($has_prefs) {
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
-<nav class="flex items-center justify-between px-6 py-4 bg-white shadow">
+<nav class="flex items-center justify-between px-6 py-4 bg-[var(--header-nav)] shadow-lime-100">
     <span class="font-bold text-lg">
         <a href="index.php">Nutricoach</a>
     </span>
@@ -153,7 +153,7 @@ if ($has_prefs) {
                     </div>
                     <!-- equipment -->
                     <div class="mb-4">
-                        <label for="equipment" class="block text-sm font-medium mb-1">equipment</label>
+                        <label for="equipment" class="block text-sm font-medium mb-1">Equipment</label>
                         <input type="text" id="equipment" name="equipment" value="<?= htmlspecialchars($equipment) ?>" class="input input-bordered w-full text-center" placeholder="Say dumbbells, resistance band, none" required>
                     </div>
                     <!-- Time limit -->
@@ -185,7 +185,7 @@ if ($has_prefs) {
             <script src="src/JS/date.js"></script>
         </div>
         <?php if (!empty($exercises)): ?>
-            <div class="bg-white rounded-lg shadow p-6 my-6">
+            <div class="bg-green-200 rounded-lg shadow-lg p-6 my-6">
                 <h2 class="text-xl font-semibold mb-2">Your personalized workout</h2>
                 <div class="prose max-w-none whitespace-pre-line"><?= nl2br(htmlspecialchars($exercises)) ?></div>
             </div>
