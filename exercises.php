@@ -45,7 +45,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
 }
 
 // Generate exercises
-// Generate exercises
 function generateExercises($goal, $level, $equipment, $time_limit, $focus_area) {
     $prompt = "Generate a $time_limit minute $level workout for $goal, focusing on $focus_area, using $equipment. Give a list of exercises with sets, reps and explanation.";
     $messages = [
