@@ -116,7 +116,7 @@ mysqli_close($db);
         </div>
     </form>
 </main>
-<footer class="py-6 text-center text-gray-500 text-sm bg-[var(--header-nav)]">
+<footer class="py-6 text-center text-gray-300 text-sm bg-[var(--header-nav)]">
     <p>©Nutricoach</p>
 </footer>
 </body>
