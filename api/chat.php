@@ -28,10 +28,11 @@ function env_get($key, $default=null){
     return $default;
 }
 
-// Input
+// Input for the AI context
 $input    = json_decode(file_get_contents('php://input'), true) ?: [];
 $model    = $input['model'] ?? 'gpt-4o-mini';
 $messages = $input['messages'] ?? [];
+$mealHistory = $input['mealHistory'] ?? [];
 
 // ============= USER RESOLVING + PREFERENCES =============
 
@@ -47,6 +48,7 @@ if (!$userId) {
     }
 }
 
+// Takes the userId and performs a SQL query based on that userId for preferences
 $profileContext = '';
 if ($userId) {
     $uid = (int)$userId;
@@ -61,11 +63,80 @@ if ($userId) {
     }
 }
 
+//Takes the userId and performs a SQL query based on that userId for meal history
+$mealsContext = '';
+if ($userId) {
+    $uid = (int)$userId;
+
+    // last 7 days, newest first (cap to a reasonable max to save tokens)
+    $q = mysqli_query(
+        $db,
+        "SELECT *
+         FROM meals
+         WHERE user_id = $uid
+           AND eaten_at >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+         ORDER BY eaten_at DESC
+         LIMIT 200"
+    );
+
+    if ($q) {
+        $lines = [];
+
+        // read ALL rows (your original only read one)
+        while ($row = mysqli_fetch_assoc($q)) {
+            // Build a compact line per meal.
+            // Adjust keys if you have specific columns; this generic version works with "*".
+            $parts = [];
+
+            // Datetime (format nicely if present)
+            if (!empty($row['eaten_at'])) {
+                $ts = strtotime($row['eaten_at']);
+                $parts[] = 'eaten_at=' . ($ts ? date('Y-m-d H:i', $ts) : $row['eaten_at']);
+            }
+
+            // Common fields (only add if present)
+            if (!empty($row['meal_type']))   $parts[] = 'meal_type=' . $row['meal_type'];
+            if (!empty($row['protein_g']))   $parts[] = 'protein_g=' . $row['protein_g'];
+            if (!empty($row['carbs_g']))     $parts[] = 'carbs_g='   . $row['carbs_g'];
+            if (!empty($row['fat_g']))       $parts[] = 'fat_g='     . $row['fat_g'];
+            if (!empty($row['notes']))       $parts[] = 'notes='     . $row['notes'];
+
+            // Fallback: if you have a 'name' or 'item' column
+            if (empty($parts)) {
+                // remove noisy keys and dump the rest as key=value
+                foreach ($row as $k => $v) {
+                    if ($v === null || $v === '' || $k === 'id' || $k === 'user_id') continue;
+                    $parts[] = "$k=$v";
+                }
+            }
+
+            if (!empty($parts)) {
+                $lines[] = '- ' . implode(', ', $parts);
+            }
+        }
+
+        if (!empty($lines)) {
+            $mealsContext =
+                "Maaltijdgeschiedenis van de gebruiker (laatste 7 dagen, nieuwste eerst):\n" .
+                implode("\n", $lines) .
+                "\n\nKijk vooral naar wat de gebruiker de laatste week heeft gegeten en baseer je advies daarop. Als er nutrition fields missen, maak een schatting op 1 serving size";
+        }
+    }
+}
+
+
 // Voeg de context als eerste system-bericht toe
 if ($profileContext !== '') {
     array_unshift($messages, [
         'role'    => 'system',
         'content' => $profileContext,
+    ]);
+}
+
+if ($mealsContext !== '') {
+    array_unshift($mealHistory, [
+        'role' => 'system',
+        'content' => $mealsContext,
     ]);
 }
 
@@ -108,4 +179,5 @@ echo json_encode([
     'reply'         => $reply,
     '__session_uid' => $userId,
     '__prefs_ctx'   => $profileContext,
+    '__mls_ctx'     => $mealsContext,
 ]);
