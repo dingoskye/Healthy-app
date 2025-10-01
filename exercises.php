@@ -134,7 +134,7 @@ if ($has_prefs) {
 <header class="text-center mt-12">
     <h1 class="text-xl font-semibold mb-2">Fitness exercises</h1>
     <p>These exercises are based on age, skill level
-        and personal preferences. <br> The personal preferences can be changed with the button below.</p>
+        and personal preferences. <br> The personal preferences can be changed with the button below. <br> <br> Note to first time users, you'll need to set your preferences to generate the workout.</p>
 </header>
 <main class="text-center mt-12">
     <section class="max-w-xl mx-auto">
