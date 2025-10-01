@@ -134,10 +134,10 @@ if ($has_prefs) {
 <header class="text-center mt-12">
     <h1 class="text-xl font-semibold mb-2">Fitness exercises</h1>
     <p>These exercises are based on age, skill level
-        and personal preferences. <br> The personal preferences can be changed with the button below.</p>
+        and personal preferences. <br> The personal preferences can be changed with the button below. <br> <br> Note to first time users, you'll need to set your preferences to generate the workout.</p>
 </header>
 <main class="text-center mt-12">
-    <section>
+    <section class="max-w-xl mx-auto">
         <div class="bg-base-200 shadow rounded-lg my-4">
             <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 outline-black bg-gray-200 rounded-lg">
                 Personal preferences
@@ -146,7 +146,7 @@ if ($has_prefs) {
                 <form method="POST" action="">
                     <!-- Goal -->
                     <div class="mb-4">
-                        <label for="goal" class="block text-sm font-medium mb-1">Goal</label>
+                        <label for="goal" class="block text-l font-medium mb-1">Goal</label>
                         <select id="goal" name="goal" class="select select-bordered w-full text-center" required>
                             <option value="muscle_gain" <?= $goal === 'muscle_gain' ? 'selected' : '' ?>>Muscle gain</option>
                             <option value="weight_loss" <?= $goal === 'weight_loss' ? 'selected' : '' ?>>Weight loss</option>
@@ -156,7 +156,7 @@ if ($has_prefs) {
                     </div>
                     <!-- level -->
                     <div class="mb-4">
-                        <label for="level" class="block text-sm font-medium mb-1">Level</label>
+                        <label for="level" class="block text-l font-medium mb-1">Level</label>
                         <select id="level" name="level" class="select select-bordered w-full text-center" required>
                             <option value="beginner" <?= $level === 'beginner' ? 'selected' : '' ?>>Beginner</option>
                             <option value="intermediate" <?= $level === 'intermediate' ? 'selected' : '' ?>>Intermediate</option>
@@ -165,17 +165,17 @@ if ($has_prefs) {
                     </div>
                     <!-- equipment -->
                     <div class="mb-4">
-                        <label for="equipment" class="block text-sm font-medium mb-1">Equipment</label>
+                        <label for="equipment" class="block text-l font-medium mb-1">Equipment</label>
                         <input type="text" id="equipment" name="equipment" value="<?= htmlspecialchars($equipment) ?>" class="input input-bordered w-full text-center" placeholder="Say dumbbells, resistance band, none" required>
                     </div>
                     <!-- Time limit -->
                     <div class="mb-4">
-                        <label for="time_limit" class="block text-sm font-medium mb-1">Time limit (in minutes)</label>
+                        <label for="time_limit" class="block text-l font-medium mb-1">Time limit (in minutes)</label>
                         <input type="number" id="time_limit" name="time_limit" value="<?= htmlspecialchars($time_limit) ?>" class="input input-bordered w-full text-center" required>
                     </div>
                     <!-- Focus area -->
                     <div class="mb-4">
-                        <label for="focus_area" class="block text-sm font-medium mb-1">Focus area</label>
+                        <label for="focus_area" class="block text-l font-medium mb-1">Focus area</label>
                         <select id="focus_area" name="focus_area" class="select select-bordered w-full text-center" required>
                             <option value="full_body" <?= $focus_area === 'full_body' ? 'selected' : '' ?>>Full body</option>
                             <option value="arms" <?= $focus_area === 'arms' ? 'selected' : '' ?>>Arms</option>
@@ -185,7 +185,7 @@ if ($has_prefs) {
                         </select>
                     </div>
 
-                    <button type="submit" name="save_settings" class="btn btn-primary">Save settings</button>
+                    <button type="submit" name="save_settings" class="btn btn-primary w-full text-lg font-medium px-4 py-3 outline-black bg-gray-200 rounded-lg">Save settings</button>
                 </form>
             </div>
         </div>

@@ -171,13 +171,13 @@ function e($s)
             <div class="grid grid-cols-2 gap-4">
                 <div>
                     <label class="block text-sm font-medium text-gray-100 mb-1">Diet / Preferences</label>
-                    <p class="whitespace-pre-line bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                    <p class="bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
                         <?= e($preferencesPart ?: '-') ?>
                     </p>
                 </div>
                 <div>
                     <label class="block text-sm font-medium text-gray-100 mb-1">Allergies</label>
-                    <p class="whitespace-pre-line bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
+                    <p class=" bg-gray-100 text-gray-900 px-3 py-2 rounded-lg">
                         <?= e($allergiesPart ?: '-') ?>
                     </p>
                 </div>
