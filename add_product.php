@@ -1,5 +1,15 @@
 
 <?php
+//Function for a logged in user to get access
+session_start();
+
+// Check if the visitor is logged in
+if (!isset($_SESSION['Login'])) {  // **GET**: Check if user is logged in (session variable)
+    // Redirect if not logged in
+    header("Location: login.php");
+    exit;
+}
+
 include 'includes/database.php';
 global $db;
 
@@ -15,11 +25,12 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     $price_raw    = str_replace(',', '.', trim($_POST['price'] ?? ''));
     $photo_choice = $_POST['photo_choice'] ?? '';
 
+    // AANGEPAST: 'link' toegevoegd aan de validatie
     if ($name === '') {
         $error_message = "Vul een naam in.";
     } elseif ($price_raw === '' || !is_numeric($price_raw)) {
         $error_message = "Ongeldige prijs.";
-    } elseif ($photo_choice !== 'api' && $photo_choice !== 'upload') {
+    } elseif (!in_array($photo_choice, ['api', 'upload', 'link'])) {
         $error_message = "Kies een foto-optie.";
     } else {
         $price    = (float)$price_raw;
@@ -49,6 +60,16 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                     $foto_url = 'uploads/' . $filename;
                 }
             }
+            // NIEUW: Logica voor de foto-link
+        } elseif ($photo_choice === 'link') {
+            $photo_link = trim($_POST['photo_link'] ?? '');
+            if (empty($photo_link)) {
+                $error_message = "Vul een fotolink in.";
+            } elseif (!filter_var($photo_link, FILTER_VALIDATE_URL)) {
+                $error_message = "Dit is geen geldige URL.";
+            } else {
+                $foto_url = $photo_link;
+            }
         }
 
         // ✅ Insert uitvoeren
@@ -60,7 +81,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
             if (!$stmt) {
                 $error_message = "DB prepare error: " . mysqli_error($db);
             } else {
-                // 'ssdsi' = string, string, double, string, integer
                 mysqli_stmt_bind_param($stmt, "ssdsi", $name, $description, $price, $foto_url, $gram);
 
                 if (mysqli_stmt_execute($stmt)) {
@@ -68,11 +88,10 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
                 } else {
                     $error_message = "Fout bij opslaan: " . mysqli_stmt_error($stmt);
                 }
-
                 mysqli_stmt_close($stmt);
             }
         }
-    } // ✅ sluit de else { van regel 21
+    }
 }
 
 // API suggestie ophalen
@@ -112,24 +131,26 @@ if ($name_for_api) {
             const val = document.querySelector('input[name="photo_choice"]:checked')?.value;
             document.getElementById('api_block').style.display = (val === 'api') ? 'flex' : 'none';
             document.getElementById('upload_block').style.display = (val === 'upload') ? 'flex' : 'none';
+            // AANGEPAST: 'link_block' toegevoegd
+            document.getElementById('link_block').style.display = (val === 'link') ? 'flex' : 'none';
         }
         function showToast() {
             const t = document.getElementById('toast');
             t.classList.add('opacity-100');
             setTimeout(() => t.classList.remove('opacity-100'), 3000);
         }
+        // Zorg ervoor dat de juiste keuze direct zichtbaar is bij het laden van de pagina
+        document.addEventListener('DOMContentLoaded', toggleChoice);
     </script>
 </head>
 <body class="bg-[#FAF3DD] flex flex-col min-h-screen text-[#264653]">
 
-<!-- HEADER -->
 <header class="bg-[#4A7C59] text-[#FAF3DD] p-6 text-center shadow-md">
     <h1 class="text-3xl font-bold">Nieuw product toevoegen</h1>
 </header>
 
 <main class="flex-1 max-w-4xl mx-auto px-4 py-6 space-y-4">
 
-    <!-- Zoekformulier -->
     <form method="GET" class="mb-4 flex gap-2">
         <input type="text" name="name" value="<?php echo htmlspecialchars($name_for_api); ?>"
                class="flex-1 p-2 rounded border-2 border-[#C8D5B9] focus:ring-2 focus:ring-[#68B0AB]"
@@ -137,14 +158,12 @@ if ($name_for_api) {
         <button type="submit" class="bg-[#68B0AB] hover:bg-[#8FC0A9] text-[#FAF3DD] px-4 py-2 rounded font-semibold">Zoek</button>
     </form>
 
-    <!-- Foutmelding -->
     <?php if ($error_message): ?>
         <div class="p-3 rounded font-semibold text-[#FAF3DD]" style="background-color:#e63946;">
             <?php echo htmlspecialchars($error_message); ?>
         </div>
     <?php endif; ?>
 
-    <!-- Formulier -->
     <form method="POST" enctype="multipart/form-data" class="bg-[#C8D5B9] p-6 rounded-xl shadow-md space-y-4">
 
         <input type="hidden" name="name" value="<?php echo htmlspecialchars($name_for_api); ?>">
@@ -157,16 +176,15 @@ if ($name_for_api) {
                class="w-full p-2 rounded border border-[#8FC0A9]">
 
         <h3 class="font-semibold">Kies een foto-optie:</h3>
-        <div class="flex gap-4 mb-2">
-            <label class="flex items-center gap-2"><input type="radio" name="photo_choice" value="api" onclick="toggleChoice()" <?php if (($_POST['photo_choice'] ?? '') === 'api') echo 'checked'; ?>> API-foto</label>
+        <div class="flex flex-wrap gap-4 mb-2">
+            <label class="flex items-center gap-2"><input type="radio" name="photo_choice" value="api" onclick="toggleChoice()" <?php if (($_POST['photo_choice'] ?? 'api') === 'api') echo 'checked'; ?>> API-foto</label>
             <label class="flex items-center gap-2"><input type="radio" name="photo_choice" value="upload" onclick="toggleChoice()" <?php if (($_POST['photo_choice'] ?? '') === 'upload') echo 'checked'; ?>> Eigen foto</label>
+            <label class="flex items-center gap-2"><input type="radio" name="photo_choice" value="link" onclick="toggleChoice()" <?php if (($_POST['photo_choice'] ?? '') === 'link') echo 'checked'; ?>> Foto-link</label>
         </div>
 
-        <!-- Foto keuzes -->
-        <div class="flex gap-4 justify-start">
-            <!-- API Suggestie -->
+        <div class="flex flex-wrap gap-4 justify-start">
             <div id="api_block" class="flex flex-col items-center justify-center p-2 bg-[#8FC0A9] rounded"
-                 style="width:20rem; height:14rem; display: <?php echo (($_POST['photo_choice'] ?? '') === 'api') ? 'flex' : 'none'; ?>;">
+                 style="width:20rem; height:14rem;">
                 <?php if ($api_photo_url): ?>
                     <p class="text-sm text-[#264653] text-center">Suggestie (portie: <?php echo htmlspecialchars($gram_suggestion ?? 'n.v.t.'); ?>)</p>
                     <img src="<?php echo htmlspecialchars($api_photo_url); ?>" class="w-48 h-48 object-cover border-2 border-[#68B0AB] rounded mt-1">
@@ -177,18 +195,23 @@ if ($name_for_api) {
                 <?php endif; ?>
             </div>
 
-            <!-- Upload -->
             <div id="upload_block" class="flex flex-col items-center justify-center p-2 bg-[#8FC0A9] rounded"
-                 style="width:20rem; height:14rem; display: <?php echo (($_POST['photo_choice'] ?? '') === 'upload') ? 'flex' : 'none'; ?>;">
+                 style="width:20rem; height:14rem;">
                 <span>Upload je eigen foto:</span>
                 <input type="file" name="image" accept="image/*" class="mt-2">
+            </div>
+
+            <div id="link_block" class="flex flex-col items-center justify-center p-2 bg-[#8FC0A9] rounded"
+                 style="width:20rem; height:14rem;">
+                <label class="block font-semibold mb-2">Plak de URL van de foto:</label>
+                <input type="url" name="photo_link" value="<?php echo htmlspecialchars($_POST['photo_link'] ?? ''); ?>"
+                       class="w-full p-2 rounded border border-[#8FC0A9]" placeholder="https://...">
             </div>
         </div>
 
         <button type="submit" class="w-full bg-[#68B0AB] hover:bg-[#8FC0A9] text-[#FAF3DD] font-semibold px-4 py-2 rounded">Toevoegen</button>
     </form>
 
-    <!-- Succesmelding -->
     <?php if ($success_message): ?>
         <div id="toast" class="fixed top-6 right-6 px-4 py-2 rounded shadow-lg text-[#FAF3DD] opacity-0 transition-opacity duration-500"
              style="background-color:#264653;">
@@ -205,3 +228,4 @@ if ($name_for_api) {
 
 </body>
 </html>
+```
