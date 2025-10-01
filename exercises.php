@@ -109,7 +109,7 @@ if ($has_prefs) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/style.css">
 </head>
-<body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
+<body class=" min-h-screen flex flex-col text-gray-800 bg-[var(--text-block)]">
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
     <span class="font-bold text-lg">
         <a href="index.php"
@@ -193,11 +193,11 @@ if ($has_prefs) {
     </section>
     <section>
         <div>
-            <p id="current-date"></p>
+            <p id="current-date" class="my-4"></p>
             <script src="src/JS/date.js"></script>
         </div>
         <?php if (!empty($exercises)): ?>
-            <div class="bg-green-200 rounded-lg shadow-lg p-6 my-6">
+            <div class="bg-green-200 rounded-lg shadow-lg p-6 ">
                 <h2 class="text-xl font-semibold mb-2">Your personalized workout</h2>
                 <div class="prose max-w-none whitespace-pre-line"><?= nl2br(htmlspecialchars($exercises)) ?></div>
             </div>
