@@ -25,7 +25,10 @@ if (!isset($_SESSION['Login'])) {  // **GET**: Check if user is logged in (sessi
 
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
     <span class="font-bold text-lg">
-        <a href="index.php">Nutricoach</a>
+        <a href="index.php"
+           class="font-bold text-2xl transition-transform duration-200 hover:scale-110 inline-block">
+    Nutricoach
+</a>
     </span>
     <div class="space-x-4 flex">
         <!-- Settings button -->
