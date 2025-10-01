@@ -132,14 +132,14 @@ if ($has_prefs) {
 
 
 <header class="text-center mt-12">
-    <h1>Fitness exercises</h1>
+    <h1 class="text-xl font-semibold mb-2">Fitness exercises</h1>
     <p>These exercises are based on age, skill level
-        and personal preferences</p>
+        and personal preferences. <br> The personal preferences can be changed with the button below.</p>
 </header>
 <main class="text-center mt-12">
     <section>
         <div class="bg-base-200 shadow rounded-lg my-4">
-            <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 focus:outline-none">
+            <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 outline-black bg-gray-200 rounded-lg">
                 Personal preferences
             </button>
             <div id="prefsForm" class="collapse-content" style="display: none;">
@@ -204,9 +204,9 @@ if ($has_prefs) {
         <?php endif; ?>
     </section>
 
-    <div>
-        <p>Hier komt de chatbot</p>
-    </div>
+<!--    <div>-->
+<!--        <p>Hier komt de chatbot</p>-->
+<!--    </div>-->
 </main>
 <footer class="py-6 text-center text-gray-300 text-sm bg-[var(--header-nav)]">
     <p>©Nutricoach</p>
