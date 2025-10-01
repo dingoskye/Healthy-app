@@ -87,6 +87,13 @@ if (isset($_POST['submit'])) {
 
     }
 }
+
+// Makes the form have htmlspecialchars so Cross-site scripting doesnt work.
+function e($s)
+{
+    return htmlspecialchars($s ?? '', ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+
 ?>
 <!doctype html>
 <html lang="en">
