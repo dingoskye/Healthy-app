@@ -136,7 +136,7 @@ if ($has_prefs) {
     <p>These exercises are based on age, skill level
         and personal preferences. <br> The personal preferences can be changed with the button below. <br> <br> Note to first time users, you'll need to set your preferences to generate the workout.</p>
 </header>
-<main class="text-center mt-12">
+<main class="flex-grow text-center mt-12">
     <section class="max-w-xl mx-auto">
         <div class="bg-base-200 shadow rounded-lg my-4">
             <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 outline-black bg-gray-200 rounded-lg">
