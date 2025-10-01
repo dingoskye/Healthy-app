@@ -135,7 +135,7 @@ function renderWeek(selectedDate) {
 }
 
 function addMealUI(container, dateStr) {
-    const time = container.getAttribute("data-time"); // ⬅️ haal time op
+    const time = container.getAttribute("data-time");
 
     if (container.querySelector('.meal-input-wrapper')) return;
 
@@ -162,7 +162,7 @@ function addMealUI(container, dateStr) {
         if (!food) return;
         const product = { product_name: food };
         appendFoodToContainer(container, product, dateStr, time);
-        saveMeal(dateStr, time, product); // ✅ tijd meegeven
+        saveMeal(dateStr, time, product);
         wrapper.remove();
     });
     wrapper.appendChild(btn);
@@ -170,7 +170,7 @@ function addMealUI(container, dateStr) {
 
     autocomplete(input, listContainer, (product) => {
         appendFoodToContainer(container, product, dateStr, time);
-        saveMeal(dateStr, time, product); //
+        saveMeal(dateStr, time, product);
         wrapper.remove();
     });
 }
@@ -205,7 +205,7 @@ function appendFoodToContainer(container, product, dateStr, time) {
     delBtn.addEventListener("click", (e) => {
         e.stopPropagation();
         li.remove();
-        deleteMeal(dateStr, time, product); // ✅ tijd meegeven
+        deleteMeal(dateStr, time, product);
     });
     li.appendChild(delBtn);
     ul.appendChild(li);
@@ -214,7 +214,7 @@ function appendFoodToContainer(container, product, dateStr, time) {
 }
 
 function saveMeal(dateStr, time, product) {
-    const key = `meals_${dateStr}_${time}`; // ✅ sleutel bevat ook tijdslot
+    const key = `meals_${dateStr}_${time}`;
     let meals = JSON.parse(localStorage.getItem(key) || "[]");
     meals.push(product);
     localStorage.setItem(key, JSON.stringify(meals));
@@ -424,24 +424,121 @@ document.addEventListener("DOMContentLoaded", () => {
     setupMealModal();
 });
 
-function updateAITips(food) {
+//hier komt de AI
+async function updateAITips(food) {
+    const msgBox = document.getElementById("ai-messages");
+    if (!msgBox || !food) return;
+
+    // Voeg direct een "user" bericht toe
+    const userP = document.createElement("p");
+    userP.className = "font-semibold text-gray-800";
+    userP.innerText = `🧍 You added: "${food}"`;
+    msgBox.appendChild(userP);
+
+    // Laat meteen AI coach venster openklappen
+    const aiCoach = document.getElementById('ai-coach');
+    if (aiCoach) aiCoach.classList.remove('translate-x-full');
+
+    // Toon een laadstatus
+    const aiP = document.createElement("p");
+    aiP.innerHTML = "🤖 Thinking...";
+    msgBox.appendChild(aiP);
+    msgBox.scrollTop = msgBox.scrollHeight;
+
+    try {
+        const res = await fetch("api/chat.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Je bent een AI voedingscoach. Geef korte feedback op individuele voedingskeuzes. Gebruik een vriendelijke toon in het Nederlands.",
+                    },
+                    {
+                        role: "user",
+                        content: `De gebruiker heeft "${food}" toegevoegd aan zijn maaltijd. Geef een korte reactie (max 2 zinnen) of dit een gezonde keuze is.`,
+                    },
+                ],
+            }),
+        });
+
+        console.log("Status:", res.status);
+        const text = await res.text();
+        console.log("Raw response:", text);
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error("JSON parse error:", e);
+            aiP.innerText = "Ongeldige JSON-response van chat.php";
+            return;
+        }
+
+        aiP.innerText = data.reply || "No answer from AI.";
+    } catch (err) {
+        console.error("AI API fout:", err);
+        aiP.innerText = "API fout of geen verbinding.";
+    }
+
+    msgBox.scrollTop = msgBox.scrollHeight;
+}
+
+async function generateDailyAdvice(dateStr) {
+    const meals = getMealsForDate(dateStr); // verzamelt uit localStorage
+
+    if (meals.length === 0) {
+        alert("Geen maaltijden om te analyseren voor deze dag.");
+        return;
+    }
+
+    const foodList = meals.map(m => m.product_name).join(", ");
     const msgBox = document.getElementById("ai-messages");
     if (!msgBox) return;
 
-    let message;
-    const normalized = (food || "").toLowerCase();
-    if (normalized.includes("ice") || normalized.includes("nutella") || normalized.includes("sugar")) {
-        message = `"${food}" looks tasty BUT be careful with sugars!`;
-    } else if (normalized.includes("apple") || normalized.includes("banana") || normalized.includes("salad") || normalized.includes("cucumber") || normalized.includes("mango")) {
-        message = `Good! "${food}" that's a healthy choice.`;
-    } else {
-        message = `ℹ You added "${food}". Keeps a nice balance with your meals.`;
+    const aiP = document.createElement("p");
+    aiP.innerHTML = "🤖 Analyse van je dag...";
+    msgBox.appendChild(aiP);
+
+    try {
+        const res = await fetch("api/chat.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Je bent een AI-voedingscoach. Geef vriendelijk advies in het Nederlands op basis van iemands maaltijden.",
+                    },
+                    {
+                        role: "user",
+                        content: `De gebruiker at vandaag: ${foodList}. Geef een korte analyse (2 zinnen) met eventueel een compliment of tip.`,
+                    },
+                ],
+            }),
+        });
+
+        const text = await res.text();
+        const data = JSON.parse(text);
+        aiP.innerText = data.reply || "Geen antwoord van AI.";
+    } catch (err) {
+        console.error("AI fout:", err);
+        aiP.innerText = "⚠️ Er ging iets mis bij het ophalen van AI-advies.";
+    }
+}
+
+function getMealsForDate(dateStr) {
+    const times = ["Breakfast", "Lunch", "Dinner", "Snack"];
+    let allMeals = [];
+
+    for (const time of times) {
+        const key = `meals_${dateStr}_${time}`;
+        const meals = JSON.parse(localStorage.getItem(key) || "[]");
+        allMeals = allMeals.concat(meals);
     }
 
-    const p = document.createElement("p");
-    p.innerText = message;
-    msgBox.appendChild(p);
-
-    const aiCoach = document.getElementById('ai-coach');
-    if (aiCoach) aiCoach.classList.remove('translate-x-full');
+    return allMeals;
 }
