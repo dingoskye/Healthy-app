@@ -8,12 +8,15 @@ $user_id = $_SESSION['user_id'] ?? 1;
 
 // Fetch preferences
 $prefs = [];
-$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ?");
+//$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ?");
+$stmt = $db->prepare("SELECT * FROM `exercise_settings` WHERE user_id = ? ORDER BY id DESC LIMIT 1");
 $stmt->bind_param("i", $user_id);
 $stmt->execute();
 $result = $stmt->get_result();
+$has_prefs = false;
 if ($result) {
     $prefs = $result->fetch_assoc() ?: [];
+    $has_prefs = !empty($prefs); // True if row exists
 }
 $stmt->close();
 
@@ -36,11 +39,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['save_settings'])) {
     $stmt->bind_param("isssis", $user_id, $goal, $level, $equipment, $time_limit, $focus_area);
     $stmt->execute();
     $stmt->close();
+
+    // Redirect to avoid resubmission and reload exercises
+    header("Location: exercises.php");
+    exit;
 }
 
 // Generate exercises
 function generateExercises($goal, $level, $equipment, $time_limit, $focus_area) {
-    $prompt = "Generate a $time_limit minute $level workout for $goal, focusing on $focus_area, using $equipment. Give a list of exercises with sets and reps.";
+    $prompt = "Generate a $time_limit minute $level workout for $goal, focusing on $focus_area, using $equipment. Give a list of exercises with sets, reps and explanation.";
     $messages = [
             ['role' => 'system', 'content' => 'You are a helpful fitness coach.'],
             ['role' => 'user', 'content' => $prompt]
@@ -51,7 +58,13 @@ function generateExercises($goal, $level, $equipment, $time_limit, $focus_area) 
             'messages' => $messages
     ];
 
-    $ch = curl_init('api/chat.php');
+    // ✅ Bouw dynamisch de URL naar api/chat.php
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $host   = $_SERVER['HTTP_HOST'];
+    $path   = rtrim(dirname($_SERVER['SCRIPT_NAME']), '/\\');
+    $url    = $scheme . "://" . $host . $path . "/api/exercisesgenerate.php";
+
+    $ch = curl_init($url);
     curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,
             CURLOPT_POST => true,
@@ -60,18 +73,30 @@ function generateExercises($goal, $level, $equipment, $time_limit, $focus_area) 
             CURLOPT_TIMEOUT => 30,
     ]);
     $res = curl_exec($ch);
+    $err = curl_error($ch);
 
-    $reply = '(No response)';
-    if ($res) {
-        $json = json_decode($res, true);
-        if (isset($json['reply'])) {
-            $reply = $json['reply'];
-        }
+    // Debug + parsing
+    if ($err) {
+        return 'Curl error: ' . $err;
     }
-    return $reply;
+    if (!$res) {
+        return '(Empty response)';
+    }
+
+    $json = json_decode($res, true);
+    if (isset($json['reply'])) {
+        return $json['reply'];
+    } elseif (isset($json['error'])) {
+        return 'Error: ' . $json['error'] . (isset($json['detail']) ? ' (' . $json['detail'] . ')' : '');
+    }
+    return 'Unexpected response: ' . $res;
 }
 
-$exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_area);
+// Only generate exercises if preferences exist
+$exercises = '';
+if ($has_prefs) {
+    $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_area);
+}
 ?>
 <!doctype html>
 <html lang="en">
@@ -85,32 +110,44 @@ $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_ar
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
-<nav class="flex items-center justify-between px-6 py-4 bg-white shadow">
+<nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
     <span class="font-bold text-lg">
-        <a href="index.php">Nutricoach</a>
+        <a href="index.php"
+           class="font-bold text-2xl transition-transform duration-200 hover:scale-110 inline-block">
+    Nutricoach
+</a>
     </span>
-    <div class="space-x-4 text-xl">
-        <a href="#" class="hover:underline">⚙️</a>
-        <a href="#" class="hover:underline">🔔</a>
+    <div class="space-x-4 flex">
+        <!-- Settings button -->
+        <a href="#" id="settingsBtn" class="hover:font-bold">
+            <img src="src/images/menu.png" alt="dropDownMenu"
+                 class="p-1 rounded hover:bg-gray-200 transition-colors duration-200">
+        </a>
+        <a href="profile.php" class="hover:underline">
+            <img src="src/images/user.png" alt="Notifications"
+                 class="p-1 rounded hover:bg-gray-200 transition-colors duration-200">
+        </a>
     </div>
 </nav>
-<header>
+
+
+<header class="text-center mt-12">
     <h1>Fitness exercises</h1>
     <p>These exercises are based on age, skill level
         and personal preferences</p>
 </header>
-<main>
+<main class="text-center mt-12">
     <section>
-        <div class="collapse collapse-arrow bg-base-200 shadow rounded-lg my-4">
-            <div class="collapse-title text-lg font-medium">
+        <div class="bg-base-200 shadow rounded-lg my-4">
+            <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 focus:outline-none">
                 Personal preferences
-            </div>
-            <div class="collapse-content">
+            </button>
+            <div id="prefsForm" class="collapse-content" style="display: none;">
                 <form method="POST" action="">
                     <!-- Goal -->
                     <div class="mb-4">
                         <label for="goal" class="block text-sm font-medium mb-1">Goal</label>
-                        <select id="goal" name="goal" class="select select-bordered w-full" required>
+                        <select id="goal" name="goal" class="select select-bordered w-full text-center" required>
                             <option value="muscle_gain" <?= $goal === 'muscle_gain' ? 'selected' : '' ?>>Muscle gain</option>
                             <option value="weight_loss" <?= $goal === 'weight_loss' ? 'selected' : '' ?>>Weight loss</option>
                             <option value="condition" <?= $goal === 'condition' ? 'selected' : '' ?>>Condition improvement</option>
@@ -120,7 +157,7 @@ $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_ar
                     <!-- level -->
                     <div class="mb-4">
                         <label for="level" class="block text-sm font-medium mb-1">Level</label>
-                        <select id="level" name="level" class="select select-bordered w-full" required>
+                        <select id="level" name="level" class="select select-bordered w-full text-center" required>
                             <option value="beginner" <?= $level === 'beginner' ? 'selected' : '' ?>>Beginner</option>
                             <option value="intermediate" <?= $level === 'intermediate' ? 'selected' : '' ?>>Intermediate</option>
                             <option value="advanced" <?= $level === 'advanced' ? 'selected' : '' ?>>Advanced</option>
@@ -128,18 +165,18 @@ $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_ar
                     </div>
                     <!-- equipment -->
                     <div class="mb-4">
-                        <label for="equipment" class="block text-sm font-medium mb-1">equipment</label>
-                        <input type="text" id="equipment" name="equipment" value="<?= htmlspecialchars($equipment) ?>" class="input input-bordered w-full" placeholder="Say dumbbells, resistance band, none" required>
+                        <label for="equipment" class="block text-sm font-medium mb-1">Equipment</label>
+                        <input type="text" id="equipment" name="equipment" value="<?= htmlspecialchars($equipment) ?>" class="input input-bordered w-full text-center" placeholder="Say dumbbells, resistance band, none" required>
                     </div>
                     <!-- Time limit -->
                     <div class="mb-4">
                         <label for="time_limit" class="block text-sm font-medium mb-1">Time limit (in minutes)</label>
-                        <input type="number" id="time_limit" name="time_limit" value="<?= htmlspecialchars($time_limit) ?>" class="input input-bordered w-full" required>
+                        <input type="number" id="time_limit" name="time_limit" value="<?= htmlspecialchars($time_limit) ?>" class="input input-bordered w-full text-center" required>
                     </div>
                     <!-- Focus area -->
                     <div class="mb-4">
                         <label for="focus_area" class="block text-sm font-medium mb-1">Focus area</label>
-                        <select id="focus_area" name="focus_area" class="select select-bordered w-full" required>
+                        <select id="focus_area" name="focus_area" class="select select-bordered w-full text-center" required>
                             <option value="full_body" <?= $focus_area === 'full_body' ? 'selected' : '' ?>>Full body</option>
                             <option value="arms" <?= $focus_area === 'arms' ? 'selected' : '' ?>>Arms</option>
                             <option value="legs" <?= $focus_area === 'legs' ? 'selected' : '' ?>>Legs</option>
@@ -152,6 +189,7 @@ $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_ar
                 </form>
             </div>
         </div>
+        <script src="src/JS/collapsible.js"></script>
     </section>
     <section>
         <div>
@@ -159,7 +197,7 @@ $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_ar
             <script src="src/JS/date.js"></script>
         </div>
         <?php if (!empty($exercises)): ?>
-            <div class="bg-white rounded-lg shadow p-6 my-6">
+            <div class="bg-green-200 rounded-lg shadow-lg p-6 my-6">
                 <h2 class="text-xl font-semibold mb-2">Your personalized workout</h2>
                 <div class="prose max-w-none whitespace-pre-line"><?= nl2br(htmlspecialchars($exercises)) ?></div>
             </div>
@@ -173,5 +211,56 @@ $exercises = generateExercises($goal, $level, $equipment, $time_limit, $focus_ar
 <footer class="py-6 text-center text-gray-300 text-sm bg-[var(--header-nav)]">
     <p>©Nutricoach</p>
 </footer>
+
+<div id="settingsSidebar"
+     class="fixed top-0 right-0 h-full w-96 bg-[var(--background)] shadow-lg transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
+
+    <!-- Header -->
+    <div class="p-4 flex justify-between items-center border-b-2 border-b-black bg-[var(--header-nav)]">
+        <h2 class="font-bold text-lg">Explore Nutricoach!</h2>
+        <button id="closeSettings" class="text-gray-900 hover:text-black">&times;</button>
+    </div>
+
+    <!-- Menu links container -->
+    <div class="flex-1 flex flex-col justify-start">
+
+        <a href="nutricoach_chatbot.php"
+           class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+            <img src="src/images/nutricoach.png" alt="Chatbot" class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+            <span class="text-black font-bold text-lg text-center w-full">Nutricoach Chatbot</span>
+        </a>
+
+        <a href="eating_pattern.php"
+           class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+            <img src="src/images/eatingpattern.png" alt="Plate with fork and knife"
+                 class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+            <span class="text-black font-bold text-lg text-center w-full">Eating Patterns</span>
+        </a>
+
+        <a href="mealslist.php"
+           class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+            <img src="src/images/meals.png" alt="Meals List" class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+            <span class="text-black font-bold text-lg text-center w-full">Meals List</span>
+        </a>
+
+        <a href="exercises.php"
+           class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+            <img src="src/images/exercises.png" alt="Exercises"
+                 class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+            <span class="text-black font-bold text-lg text-center w-full">Exercises</span>
+        </a>
+
+        <!-- Last “coming soon” button that fills remaining space -->
+        <p
+                class="flex-1 flex items-center justify-center p-4">
+            <span class="text-black font-bold text-lg text-center w-full">New sites coming soon...</span>
+        </p>
+
+    </div>
+</div>
+
+<div id="settingsBackdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+<script src="src/JS/settings.js"></script>
+
 </body>
 </html>

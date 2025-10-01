@@ -110,7 +110,6 @@ function renderWeek(selectedDate) {
     `;
         });
 
-
         sec.querySelectorAll('.add-meal-btn').forEach(btn => {
             if (dayDate > today) {
                 btn.disabled = true;
@@ -135,18 +134,9 @@ function renderWeek(selectedDate) {
     }
 }
 
-function restoreMeals(section, dateStr) {
-    const key = `meals_${dateStr}`;
-    const meals = JSON.parse(localStorage.getItem(key) || "[]");
-    const slots = section.querySelectorAll(".time-slot");
-
-    if (meals.length > 0 && slots.length > 0) {
-        const container = slots[0];
-        meals.forEach(product => appendFoodToContainer(container, product, dateStr));
-    }
-}
-
 function addMealUI(container, dateStr) {
+    const time = container.getAttribute("data-time");
+
     if (container.querySelector('.meal-input-wrapper')) return;
 
     const wrapper = document.createElement('div');
@@ -171,21 +161,21 @@ function addMealUI(container, dateStr) {
         const food = input.value.trim();
         if (!food) return;
         const product = { product_name: food };
-        appendFoodToContainer(container, product, dateStr);
-        saveMeal(dateStr, product);
+        appendFoodToContainer(container, product, dateStr, time);
+        saveMeal(dateStr, time, product);
         wrapper.remove();
     });
     wrapper.appendChild(btn);
     container.appendChild(wrapper);
 
     autocomplete(input, listContainer, (product) => {
-        appendFoodToContainer(container, product, dateStr);
-        saveMeal(dateStr, product);
+        appendFoodToContainer(container, product, dateStr, time);
+        saveMeal(dateStr, time, product);
         wrapper.remove();
     });
 }
 
-function appendFoodToContainer(container, product, dateStr) {
+function appendFoodToContainer(container, product, dateStr, time) {
     let ul = container.querySelector("ul");
     if (!ul) {
         ul = document.createElement("ul");
@@ -213,76 +203,124 @@ function appendFoodToContainer(container, product, dateStr) {
     delBtn.innerText = "delete";
     delBtn.className = "text-red-500 hover:text-red-700";
     delBtn.addEventListener("click", (e) => {
-        e.stopPropagation(); //voor komt dat modal opent. IS
+        e.stopPropagation();
         li.remove();
-        deleteMeal(dateStr, product);
+        deleteMeal(dateStr, time, product);
     });
     li.appendChild(delBtn);
-
     ul.appendChild(li);
 
     updateAITips(product.product_name || "");
 }
 
-function saveMeal(dateStr, product) {
-    const key = `meals_${dateStr}`;
+function saveMeal(dateStr, time, product) {
+    const key = `meals_${dateStr}_${time}`;
     let meals = JSON.parse(localStorage.getItem(key) || "[]");
     meals.push(product);
     localStorage.setItem(key, JSON.stringify(meals));
 }
 
-function deleteMeal(dateStr, product) {
-    const key = `meals_${dateStr}`;
+function deleteMeal(dateStr, time, product) {
+    const key = `meals_${dateStr}_${time}`;
     let meals = JSON.parse(localStorage.getItem(key) || "[]");
     meals = meals.filter(p => p.product_name !== product.product_name);
     localStorage.setItem(key, JSON.stringify(meals));
 }
 
+
+function restoreMeals(section, dateStr) {
+    section.querySelectorAll(".time-slot").forEach(slot => {
+        const time = slot.getAttribute("data-time");
+        const key = `meals_${dateStr}_${time}`;
+        const meals = JSON.parse(localStorage.getItem(key) || "[]");
+
+        meals.forEach(product => appendFoodToContainer(slot, product, dateStr, time));
+    });
+}
+
 function autocomplete(input, listContainer, onSelectProduct) {
     let controller = null;
+
     input.addEventListener("input", async function () {
         const value = this.value.trim().toLowerCase();
-        listContainer.innerText = "";
+        listContainer.innerHTML = ""
         if (controller) controller.abort();
         if (!value) return;
 
         controller = new AbortController();
         try {
-            const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(value)}&search_simple=1&action=process&json=1&page_size=8`;
+            const url = `https://world.openfoodfacts.org/cgi/search.pl?search_terms=${encodeURIComponent(value)}&search_simple=1&action=process&json=1&page_size=20`;
             const res = await fetch(url, { signal: controller.signal });
             const data = await res.json();
 
-            if (data.products && data.products.length > 0) {
-                data.products.forEach(product => {
-                    if (!product.product_name) return;
-
-                    const item = document.createElement("div");
-                    item.className = "cursor-pointer px-2 py-1 hover:bg-gray-100 flex items-center";
-
-                    if (product.image_front_small_url || product.image_small_url || product.image_url) {
-                        const img = document.createElement("img");
-                        img.src = product.image_front_small_url || product.image_small_url || product.image_url;
-                        img.className = "w-8 h-8 object-cover rounded mr-2";
-                        item.appendChild(img);
-                    }
-
-                    const div = document.createElement("div");
-                    div.innerText = product.product_name;
-                    div.className = "truncate";
-                    item.appendChild(div);
-
-                    item.addEventListener("click", function () {
-                        input.value = product.product_name;
-                        listContainer.innerHTML = "";
-                        showFoodInfo(product);
-                        if (typeof onSelectProduct === "function") onSelectProduct(product);
-                    });
-
-                    listContainer.appendChild(item);
-                });
+            if (!data.products || data.products.length === 0) {
+                const noItem = document.createElement("div");
+                noItem.className = "px-2 py-1 text-gray-500 italic";
+                noItem.innerText = `"${value}" not found.`;
+                listContainer.appendChild(noItem);
+                return;
             }
+
+            const sorted = data.products
+                .filter(p => p.product_name)
+                .sort((a, b) => {
+                    const an = a.product_name.toLowerCase();
+                    const bn = b.product_name.toLowerCase();
+                    const aStarts = an.startsWith(value);
+                    const bStarts = bn.startsWith(value);
+                    if (aStarts && !bStarts) return -1;
+                    if (!aStarts && bStarts) return 1;
+                    return an.localeCompare(bn); // fallback alfabetisch
+                });
+
+            sorted.forEach(product => {
+                const lowerName = product.product_name.toLowerCase();
+                const index = lowerName.indexOf(value);
+
+                const item = document.createElement("div");
+                item.className = "cursor-pointer px-2 py-1 hover:bg-gray-100 flex items-center";
+
+                if (product.image_front_small_url || product.image_small_url || product.image_url) {
+                    const img = document.createElement("img");
+                    img.src = product.image_front_small_url || product.image_small_url || product.image_url;
+                    img.className = "w-8 h-8 object-cover rounded mr-2";
+                    item.appendChild(img);
+                }
+
+                const nameWrapper = document.createElement("div");
+                nameWrapper.className = "truncate";
+
+                if (index !== -1) {
+                    const before = document.createTextNode(product.product_name.substring(0, index));
+                    const match = document.createElement("span");
+                    match.style.fontWeight = "bold";
+                    match.innerText = product.product_name.substring(index, index + value.length);
+                    const after = document.createTextNode(product.product_name.substring(index + value.length));
+
+                    nameWrapper.appendChild(before);
+                    nameWrapper.appendChild(match);
+                    nameWrapper.appendChild(after);
+                } else {
+                    nameWrapper.innerText = product.product_name;
+                }
+
+                item.appendChild(nameWrapper);
+
+                item.addEventListener("click", function () {
+                    input.value = product.product_name;
+                    listContainer.innerHTML = "";
+                    showFoodInfo(product);
+                    if (typeof onSelectProduct === "function") {
+                        onSelectProduct(product);
+                    }
+                });
+
+                listContainer.appendChild(item);
+            });
         } catch (err) {
-            if (err.name !== 'AbortError') console.error("Error fetching OpenFoodFacts:", err);
+            if (err.name !== 'AbortError') {
+                console.error("Error fetching OpenFoodFacts:", err);
+            }
         }
     });
 
@@ -386,24 +424,121 @@ document.addEventListener("DOMContentLoaded", () => {
     setupMealModal();
 });
 
-function updateAITips(food) {
+//hier komt de AI
+async function updateAITips(food) {
+    const msgBox = document.getElementById("ai-messages");
+    if (!msgBox || !food) return;
+
+    // Voeg direct een "user" bericht toe
+    const userP = document.createElement("p");
+    userP.className = "font-semibold text-gray-800";
+    userP.innerText = `🧍 You added: "${food}"`;
+    msgBox.appendChild(userP);
+
+    // Laat meteen AI coach venster openklappen
+    const aiCoach = document.getElementById('ai-coach');
+    if (aiCoach) aiCoach.classList.remove('translate-x-full');
+
+    // Toon een laadstatus
+    const aiP = document.createElement("p");
+    aiP.innerHTML = "🤖 Thinking...";
+    msgBox.appendChild(aiP);
+    msgBox.scrollTop = msgBox.scrollHeight;
+
+    try {
+        const res = await fetch("api/chat.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Je bent een AI voedingscoach. Geef korte feedback op individuele voedingskeuzes. Gebruik een vriendelijke toon in het Nederlands.",
+                    },
+                    {
+                        role: "user",
+                        content: `De gebruiker heeft "${food}" toegevoegd aan zijn maaltijd. Geef een korte reactie (max 2 zinnen) of dit een gezonde keuze is.`,
+                    },
+                ],
+            }),
+        });
+
+        console.log("Status:", res.status);
+        const text = await res.text();
+        console.log("Raw response:", text);
+
+        let data;
+        try {
+            data = JSON.parse(text);
+        } catch (e) {
+            console.error("JSON parse error:", e);
+            aiP.innerText = "Ongeldige JSON-response van chat.php";
+            return;
+        }
+
+        aiP.innerText = data.reply || "No answer from AI.";
+    } catch (err) {
+        console.error("AI API fout:", err);
+        aiP.innerText = "API fout of geen verbinding.";
+    }
+
+    msgBox.scrollTop = msgBox.scrollHeight;
+}
+
+async function generateDailyAdvice(dateStr) {
+    const meals = getMealsForDate(dateStr); // verzamelt uit localStorage
+
+    if (meals.length === 0) {
+        alert("Geen maaltijden om te analyseren voor deze dag.");
+        return;
+    }
+
+    const foodList = meals.map(m => m.product_name).join(", ");
     const msgBox = document.getElementById("ai-messages");
     if (!msgBox) return;
 
-    let message;
-    const normalized = (food || "").toLowerCase();
-    if (normalized.includes("ice") || normalized.includes("nutella") || normalized.includes("sugar")) {
-        message = `"${food}" looks tasty BUT be careful with sugars!`;
-    } else if (normalized.includes("apple") || normalized.includes("banana") || normalized.includes("salad") || normalized.includes("cucumber") || normalized.includes("mango")) {
-        message = `Good! "${food}" that's a healthy choice.`;
-    } else {
-        message = `ℹ You added "${food}". Keeps a nice balance with your meals.`;
+    const aiP = document.createElement("p");
+    aiP.innerHTML = "🤖 Analyse van je dag...";
+    msgBox.appendChild(aiP);
+
+    try {
+        const res = await fetch("api/chat.php", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                model: "gpt-4o-mini",
+                messages: [
+                    {
+                        role: "system",
+                        content: "Je bent een AI-voedingscoach. Geef vriendelijk advies in het Nederlands op basis van iemands maaltijden.",
+                    },
+                    {
+                        role: "user",
+                        content: `De gebruiker at vandaag: ${foodList}. Geef een korte analyse (2 zinnen) met eventueel een compliment of tip.`,
+                    },
+                ],
+            }),
+        });
+
+        const text = await res.text();
+        const data = JSON.parse(text);
+        aiP.innerText = data.reply || "Geen antwoord van AI.";
+    } catch (err) {
+        console.error("AI fout:", err);
+        aiP.innerText = "⚠️ Er ging iets mis bij het ophalen van AI-advies.";
+    }
+}
+
+function getMealsForDate(dateStr) {
+    const times = ["Breakfast", "Lunch", "Dinner", "Snack"];
+    let allMeals = [];
+
+    for (const time of times) {
+        const key = `meals_${dateStr}_${time}`;
+        const meals = JSON.parse(localStorage.getItem(key) || "[]");
+        allMeals = allMeals.concat(meals);
     }
 
-    const p = document.createElement("p");
-    p.innerText = message;
-    msgBox.appendChild(p);
-
-    const aiCoach = document.getElementById('ai-coach');
-    if (aiCoach) aiCoach.classList.remove('translate-x-full');
+    return allMeals;
 }

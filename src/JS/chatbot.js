@@ -8,7 +8,9 @@
                     'you are a high-intelligence nutrition coach. ' +
                     'You are cheerful and ready to help your user in giving nutrition advice based on their needs. ' +
                     'You only give nutrition advice, if the user asks for something else you kindly redirect towards the topic of nutrition. ' +
-                    'Assume that user has no knowledge on the nutrition facts of their food. Make accurate estimates based on the dish names given.',
+                    'Assume that user has no knowledge on the nutrition facts of their food. Make accurate estimates based on the dish names given.' +
+                    'If there is an issue that is too dangerous for an AI bot to handle, refer the user to contact a professional for advice/suggestions.'
+
             },
         ],
     };
@@ -58,8 +60,10 @@
             const res = await fetch('api/chat.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',        // <-- voeg dit toe
                 body: JSON.stringify({ model: els.model.value, messages: state.history }),
             });
+
             if (!res.ok) throw new Error('Proxy error: ' + res.status + ' ' + res.statusText);
             const data = await res.json();
             const reply = data.reply || '(No response)';
@@ -82,7 +86,7 @@
     });
 
     // Greet
-    addMessage('assistant', 'Hi! Ask me anything.');
+    addMessage('assistant', 'Hi! I am Nutribot! I am an AI coach, here to help you with your nutrition needs!');
 })();
 
 //mapangpang
