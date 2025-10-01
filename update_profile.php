@@ -154,6 +154,59 @@ function e($s)
             </div>
         </form>
     </div>
+
+    <div id="settingsSidebar"
+         class="fixed top-0 right-0 h-full w-96 bg-[var(--background)] shadow-lg transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
+
+        <!-- Header -->
+        <div class="p-4 flex justify-between items-center border-b-2 border-b-black bg-[var(--header-nav)]">
+            <h2 class="font-bold text-lg">Explore Nutricoach!</h2>
+            <button id="closeSettings" class="text-gray-900 hover:text-black">&times;</button>
+        </div>
+
+        <!-- Menu links container -->
+        <div class="flex-1 flex flex-col justify-start">
+
+            <a href="nutricoach_chatbot.php"
+               class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+                <img src="src/images/nutricoach.png" alt="Chatbot"
+                     class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+                <span class="text-black font-bold text-lg text-center w-full">Nutricoach Chatbot</span>
+            </a>
+
+            <a href="eating_pattern.php"
+               class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+                <img src="src/images/eatingpattern.png" alt="Plate with fork and knife"
+                     class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+                <span class="text-black font-bold text-lg text-center w-full">Eating Patterns</span>
+            </a>
+
+            <a href="mealslist.php"
+               class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+                <img src="src/images/meals.png" alt="Meals List"
+                     class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+                <span class="text-black font-bold text-lg text-center w-full">Meals List</span>
+            </a>
+
+            <a href="exercises.php"
+               class="relative flex items-center justify-center gap-2 p-4 border-b border-black hover:bg-[var(--header-nav)] hover:text-white transition-all duration-200">
+                <img src="src/images/exercises.png" alt="Exercises"
+                     class="w-6 h-6 absolute left-4 top-1/2 -translate-y-1/2">
+                <span class="text-black font-bold text-lg text-center w-full">Exercises</span>
+            </a>
+
+            <!-- Last “coming soon” button that fills remaining space -->
+            <p
+                    class="flex-1 flex items-center justify-center p-4">
+                <span class="text-black font-bold text-lg text-center w-full">New sites coming soon...</span>
+            </p>
+
+        </div>
+    </div>
+
+    <div id="settingsBackdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
+    <script src="src/JS/settings.js"></script>
+
 </main>
 </body>
 </html>
