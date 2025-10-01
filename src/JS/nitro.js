@@ -5,7 +5,7 @@
 window.addEventListener("load", () => init());
 
 // URL voor de API-aanroepen (GET en POST)
-const apiUrl = "http://healthy-app.test/nutricoach_chatbot.php?api=1";
+const apiUrl = "https://project.cmi.hr.nl/2025_2026/tle1_t1/extra_testing_2/healthy-app/api/chat.php";
 
 // Variabelen voor geselecteerde fruit-optie en DOM-elementen
 let selectedFruit = "";      // Opslag van gekozen fruit-knop
