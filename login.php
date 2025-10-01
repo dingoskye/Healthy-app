@@ -47,6 +47,8 @@ if (isset($_POST['submit'])) {
                 $_SESSION['email'] = $users['email'];
                 $_SESSION['admin_id'] = $users['admin_id'];
                 $_SESSION['id'] = $users['id'];
+                $_SESSION['user_id'] = $users['id']; // <-- nodig voor api/chat.php
+
                 header('location: index.php');
                 exit();
             } else {

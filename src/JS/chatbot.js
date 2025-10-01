@@ -60,8 +60,10 @@
             const res = await fetch('api/chat.php', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
+                credentials: 'include',        // <-- voeg dit toe
                 body: JSON.stringify({ model: els.model.value, messages: state.history }),
             });
+
             if (!res.ok) throw new Error('Proxy error: ' + res.status + ' ' + res.statusText);
             const data = await res.json();
             const reply = data.reply || '(No response)';

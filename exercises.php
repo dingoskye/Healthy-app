@@ -109,7 +109,7 @@ if ($has_prefs) {
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="src/style.css">
 </head>
-<body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
+<body class=" min-h-screen flex flex-col text-gray-800 bg-[var(--text-block)]">
 <nav class="bg-[var(--header-nav)] text-white p-4 flex justify-between items-center">
     <span class="font-bold text-lg">
         <a href="index.php"
@@ -132,21 +132,21 @@ if ($has_prefs) {
 
 
 <header class="text-center mt-12">
-    <h1>Fitness exercises</h1>
+    <h1 class="text-xl font-semibold mb-2">Fitness exercises</h1>
     <p>These exercises are based on age, skill level
-        and personal preferences</p>
+        and personal preferences. <br> The personal preferences can be changed with the button below. <br> <br> Note to first time users, you'll need to set your preferences to generate the workout.</p>
 </header>
-<main class="text-center mt-12">
-    <section>
+<main class="flex-grow text-center mt-12">
+    <section class="max-w-xl mx-auto">
         <div class="bg-base-200 shadow rounded-lg my-4">
-            <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 focus:outline-none">
+            <button type="button" id="toggleForm" class="w-full text-left text-lg font-medium px-4 py-3 outline-black bg-gray-200 rounded-lg">
                 Personal preferences
             </button>
             <div id="prefsForm" class="collapse-content" style="display: none;">
                 <form method="POST" action="">
                     <!-- Goal -->
                     <div class="mb-4">
-                        <label for="goal" class="block text-sm font-medium mb-1">Goal</label>
+                        <label for="goal" class="block text-l font-medium mb-1">Goal</label>
                         <select id="goal" name="goal" class="select select-bordered w-full text-center" required>
                             <option value="muscle_gain" <?= $goal === 'muscle_gain' ? 'selected' : '' ?>>Muscle gain</option>
                             <option value="weight_loss" <?= $goal === 'weight_loss' ? 'selected' : '' ?>>Weight loss</option>
@@ -156,7 +156,7 @@ if ($has_prefs) {
                     </div>
                     <!-- level -->
                     <div class="mb-4">
-                        <label for="level" class="block text-sm font-medium mb-1">Level</label>
+                        <label for="level" class="block text-l font-medium mb-1">Level</label>
                         <select id="level" name="level" class="select select-bordered w-full text-center" required>
                             <option value="beginner" <?= $level === 'beginner' ? 'selected' : '' ?>>Beginner</option>
                             <option value="intermediate" <?= $level === 'intermediate' ? 'selected' : '' ?>>Intermediate</option>
@@ -165,17 +165,17 @@ if ($has_prefs) {
                     </div>
                     <!-- equipment -->
                     <div class="mb-4">
-                        <label for="equipment" class="block text-sm font-medium mb-1">Equipment</label>
+                        <label for="equipment" class="block text-l font-medium mb-1">Equipment</label>
                         <input type="text" id="equipment" name="equipment" value="<?= htmlspecialchars($equipment) ?>" class="input input-bordered w-full text-center" placeholder="Say dumbbells, resistance band, none" required>
                     </div>
                     <!-- Time limit -->
                     <div class="mb-4">
-                        <label for="time_limit" class="block text-sm font-medium mb-1">Time limit (in minutes)</label>
+                        <label for="time_limit" class="block text-l font-medium mb-1">Time limit (in minutes)</label>
                         <input type="number" id="time_limit" name="time_limit" value="<?= htmlspecialchars($time_limit) ?>" class="input input-bordered w-full text-center" required>
                     </div>
                     <!-- Focus area -->
                     <div class="mb-4">
-                        <label for="focus_area" class="block text-sm font-medium mb-1">Focus area</label>
+                        <label for="focus_area" class="block text-l font-medium mb-1">Focus area</label>
                         <select id="focus_area" name="focus_area" class="select select-bordered w-full text-center" required>
                             <option value="full_body" <?= $focus_area === 'full_body' ? 'selected' : '' ?>>Full body</option>
                             <option value="arms" <?= $focus_area === 'arms' ? 'selected' : '' ?>>Arms</option>
@@ -185,7 +185,7 @@ if ($has_prefs) {
                         </select>
                     </div>
 
-                    <button type="submit" name="save_settings" class="btn btn-primary">Save settings</button>
+                    <button type="submit" name="save_settings" class="btn btn-primary w-full text-lg font-medium px-4 py-3 outline-black bg-gray-200 rounded-lg">Save settings</button>
                 </form>
             </div>
         </div>
@@ -193,20 +193,20 @@ if ($has_prefs) {
     </section>
     <section>
         <div>
-            <p id="current-date"></p>
+            <p id="current-date" class="my-4"></p>
             <script src="src/JS/date.js"></script>
         </div>
         <?php if (!empty($exercises)): ?>
-            <div class="bg-green-200 rounded-lg shadow-lg p-6 my-6">
+            <div class="bg-green-200 rounded-lg shadow-lg p-6 ">
                 <h2 class="text-xl font-semibold mb-2">Your personalized workout</h2>
                 <div class="prose max-w-none whitespace-pre-line"><?= nl2br(htmlspecialchars($exercises)) ?></div>
             </div>
         <?php endif; ?>
     </section>
 
-    <div>
-        <p>Hier komt de chatbot</p>
-    </div>
+<!--    <div>-->
+<!--        <p>Hier komt de chatbot</p>-->
+<!--    </div>-->
 </main>
 <footer class="py-6 text-center text-gray-300 text-sm bg-[var(--header-nav)]">
     <p>©Nutricoach</p>
