@@ -1,72 +1,44 @@
 <?php
-//Function for a logged in user to get access
 session_start();
+require_once 'includes/database.php';
 
-// Check if the visitor is logged in
-if (!isset($_SESSION['Login'])) {  // **GET**: Check if user is logged in (session variable)
-    // Redirect if not logged in
-    header("Location: login.php");
-    exit;
+$userId = $_SESSION['id'] ?? null;
+
+if ($userId === null) {
+    header('Location: login.php');
+    exit();
 }
 
-global $db;
-include 'includes/database.php'; // Verbind met je MySQL-database
-// ================== BACKEND LOGIC ==================
-// POST request met ?api=1 → sla nieuwe data op in database
-if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_GET['api'])) {
-    header('Content-Type: application/json');
-    $input = json_decode(file_get_contents('php://input'), true); // Ontvang JSON van frontend
+$errors = [];
 
-// Bereid SQL statement voor
-// Note: The ON DUPLICATE KEY UPDATE part seems to be missing some columns in the original code.
-// I've corrected it to include all fields.
-    $stmt = $db->prepare("INSERT INTO nutrition_data (user_id, fruit, vegetables, carbs, dairy, protein) VALUES (?, ?, ?, ?, ?, ?)
-                       ON DUPLICATE KEY UPDATE
-                           fruit=VALUES(fruit), 
-                           vegetables=VALUES(vegetables),
-                           carbs=VALUES(carbs), 
-                           dairy=VALUES(dairy), 
-                           protein=VALUES(protein)");
+if (isset ($_POST['submit'])) {
+    // form velden
+    $fruits = $_POST['fruits'];
+    $vegetables = $_POST['vegetables'];
+    $carbs = $_POST['carbs'];
+    $dairy = $_POST['dairy'];
+    $protein = $_POST['protein'];
+    $createdAt = date('Y-m-d H:i:s');
 
-// Note: Assuming user_id is an integer (i), the rest are strings (s).
-    $stmt->bind_param(
-        "isssss",
-        $input['user_id'],
-        $input['fruit'],
-        $input['vegetables'],
-        $input['carbs'],
-        $input['dairy'],
-        $input['protein']
-    );
+    if (empty($errors)) {
+        $query = "INSERT INTO nutrition_data 
+          (user_id, fruit, vegetables, carbs, dairy, protein, created_at) 
+          VALUES ('$userId', '$fruits', '$vegetables', '$carbs', '$dairy', '$protein', '$createdAt')";
 
-    if ($stmt->execute()) {
-        echo json_encode(['status' => 'saved']);
-    } else {
-        echo json_encode(['status' => 'error', 'message' => $stmt->error]);
     }
 
-    $stmt->close();
-    $db->close();
-    exit;
-}
+    $result = mysqli_query($db, $query);
 
-// GET request met ?api=1 → haal data uit database
-if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
-    header('Content-Type: application/json');
-
-    $result = $db->query("SELECT * FROM nutrition_data ORDER BY id DESC LIMIT 1"); // laatste rij
-    if ($result && $row = $result->fetch_assoc()) {
-        echo json_encode($row);
+    if ($result) {
+        header('Location: nutricoach_analysis.php');
+        exit;
     } else {
-        echo json_encode([]);
+        $errors['db'] = "Errors inserting into meals table.";
     }
-
-    $db->close();
-    exit;
 }
-
 
 ?>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -104,57 +76,78 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
 
 <!-- ===== HEADER ===== -->
 <header class="bg-[#8FC0A9] w-full p-4 rounded shadow-lg text-center mb-6">
-    <h1 class="text-2xl font-bold">Hey there Anna,</h1>
+    <h1 class="text-2xl font-bold">Hey there,</h1>
     <p class="text-lg">Let’s track your nutritions</p>
 </header>
 
-<!-- ===== MAIN CONTENT ===== -->
-<main id="tracker" class="w-full max-w-md space-y-6">
+<form action="" method="post">
+    <!-- ===== MAIN CONTENT ===== -->
+    <main id="tracker" class="w-full max-w-md space-y-6">
 
-    <!-- ✅ Statusmeldingen boven het formulier -->
-    <div id="status" class="text-center text-sm mb-4 font-semibold"></div>
+        <!-- ✅ Statusmeldingen boven het formulier -->
+        <div id="status" class="text-center text-sm mb-4 font-semibold"></div>
 
-    <!-- ====== Fruit-keuze knoppen ====== -->
-    <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
-        <h2 class="font-semibold mb-3">How many fruits have you eaten today?</h2>
-        <div id="fruit-options" class="flex justify-between">
-            <button class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full">0-1</button>
-            <button class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full">2-3</button>
-            <button class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full">4-5</button>
-            <button class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full">5+</button>
-        </div>
-    </section>
+        <!-- ====== Fruit-keuze knoppen ====== -->
+        <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">How many fruits have you eaten today?</h2>
+            <div id="fruit-options" class="flex justify-between">
+                <label>
+                    <input type="radio" name="fruits" value="0-1" class="hidden peer">
+                    <span class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full peer-checked:bg-[#68B0AB]">
+                    0-1
+                </span>
+                </label>
+                <label>
+                    <input type="radio" name="fruits" value="2-3" class="hidden peer">
+                    <span class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full peer-checked:bg-[#68B0AB]">
+                    2-3
+                </span>
+                </label>
+                <label>
+                    <input type="radio" name="fruits" value="4-5" class="hidden peer">
+                    <span class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full peer-checked:bg-[#68B0AB]">
+                    4-5
+                </span>
+                </label>
+                <label>
+                    <input type="radio" name="fruits" value="5+" class="hidden peer">
+                    <span class="fruit-btn bg-[#eec584] hover:bg-[#68B0AB] px-4 py-2 rounded-full peer-checked:bg-[#68B0AB]">
+                    5+
+                </span>
+                </label>
+            </div>
+        </section>
 
-    <!-- ✅ Tekstvelden voor overige categorieën -->
-    <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
-        <h2 class="font-semibold mb-3">What vegetables have you had so far?</h2>
-        <input id="vegetables" type="text" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
-    </section>
+        <!-- ✅ Tekstvelden voor overige categorieën -->
+        <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">What vegetables have you had so far?</h2>
+            <input id="vegetables" type="text" name="vegetables" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
+        </section>
 
-    <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
-        <h2 class="font-semibold mb-3">Did you eat something with bread, rice, pasta, or potatoes today?</h2>
-        <input id="carbs" type="text" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
-    </section>
+        <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">Did you eat something with bread, rice, pasta, or potatoes today?</h2>
+            <input id="carbs" type="text" name="carbs" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
+        </section>
 
-    <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
-        <h2 class="font-semibold mb-3">Have you had milk, cheese, yogurt, or a dairy alternative yet?</h2>
-        <input id="dairy" type="text" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
-    </section>
+        <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">Have you had milk, cheese, yogurt, or a dairy alternative yet?</h2>
+            <input id="dairy" type="text" name="dairy" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
+        </section>
 
-    <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
-        <h2 class="font-semibold mb-3">What beans, lentils, eggs, fish, or meat have you eaten today?</h2>
-        <input id="protein" type="text" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
-    </section>
+        <section class="bg-[#C8D5B9] p-4 rounded-xl shadow-md">
+            <h2 class="font-semibold mb-3">What beans, lentils, eggs, fish, or meat have you eaten today?</h2>
+            <input id="protein" type="text" name="protein" class="w-full p-2 rounded-lg border border-[#4A7C59]" />
+        </section>
 
-    <!-- ✅ Opslaan-knop -->
-    <button id="submit" class="w-full bg-[#00916E] hover:bg-[#0E1774] text-white font-bold py-3 rounded-xl shadow-lg">
-        Save Nutrition
-    </button>
+        <!-- ✅ Opslaan-knop -->
+        <button id="submit" type="submit" name="submit" class="w-full bg-[#00916E] hover:bg-[#0E1774] text-white font-bold py-3 rounded-xl shadow-lg">
+            Save Nutrition
+        </button>
 
-    <!-- ✅ Statusmeldingen (bijv. “saved successfully”) -->
-    <div id="status" class="text-center text-sm mt-4"></div>
-</main>
-
+        <!-- ✅ Statusmeldingen (bijv. “saved successfully”) -->
+        <div id="status" class="text-center text-sm mt-4"></div>
+    </main>
+</form>
 
 <div id="settingsSidebar"
      class="fixed top-0 right-0 h-full w-96 bg-[var(--background)] shadow-lg transform translate-x-full transition-transform duration-300 z-50 flex flex-col">
@@ -204,10 +197,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'GET' && isset($_GET['api'])) {
 </div>
 
 <div id="settingsBackdrop" class="fixed inset-0 bg-black bg-opacity-50 hidden z-40"></div>
-
-<!-- ✅ Koppel de externe JavaScript bestanden -->
-<script src="src/JS/settings.js"></script>
-<script src="src/JS/nitro.js"></script>
 
 </body>
 </html>

@@ -107,13 +107,6 @@ function e($s)
     <link rel="stylesheet" href="src/style.css">
 </head>
 <body class="bg-[var(--background)] min-h-screen flex flex-col text-gray-800">
-<nav class="flex items-center justify-between px-6 py-4 bg-white shadow">
-    <a href="#"><img src="" alt="logo" class="h-10"></a>
-    <div class="space-x-4 text-xl">
-        <a href="#" class="hover:text-blue-600">⚙️</a>
-        <a href="#" class="hover:text-blue-600">🔔</a>
-    </div>
-</nav>
 <header class="text-center mt-12">
     <h1 class="text-3xl font-bold text-gray-900">Register</h1>
 </header>
